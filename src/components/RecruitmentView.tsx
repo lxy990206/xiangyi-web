@@ -165,7 +165,7 @@ export const RecruitmentView: React.FC = () => {
             </div>
 
             {/* Preferred qualifications */}
-            {activePos.preferredQualifications.length > 0 && (
+            {(activePos.preferredQualifications?.length ?? 0) > 0 && (
               <div className="space-y-2 pt-2 border-t border-slate-800">
                 <h4 className="text-xs font-bold text-purple-300 uppercase tracking-wider">
                   【加分项】
