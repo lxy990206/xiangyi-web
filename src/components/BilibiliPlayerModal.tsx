@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  X, 
-  ExternalLink, 
-  Play, 
-  Pause, 
-  Volume2, 
-  Share2, 
-  Tv, 
-  Send, 
-  Sparkles, 
-  Layers, 
-  Disc3, 
-  Copy, 
+import {
+  X,
+  ExternalLink,
+  Play,
+  Pause,
+  Volume2,
+  Share2,
+  Tv,
+  Sparkles,
+  Layers,
+  Disc3,
+  Copy,
   Check,
   Maximize2
 } from 'lucide-react';
@@ -33,15 +32,6 @@ export const BilibiliPlayerModal: React.FC<BilibiliPlayerModalProps> = ({
   onPlaySynth,
   isSynthPlaying,
 }) => {
-  const [danmakuList, setDanmakuList] = useState<{ id: string; text: string; top: number; color: string }[]>([
-    { id: '1', text: '相依团队太强了！为爱发电！', top: 15, color: '#66CCFF' },
-    { id: '2', text: '千灯升起的时候真的泪目了……', top: 35, color: '#FFFFFF' },
-    { id: '3', text: '曲绘美哭！PV神仙运镜！', top: 55, color: '#FFD700' },
-    { id: '4', text: '阿绫的声线绝了！三连投币支持！', top: 75, color: '#EE0000' },
-    { id: '5', text: '相依同行，此生不悔入V家！', top: 25, color: '#00FFCC' },
-  ]);
-  const [danmakuInput, setDanmakuInput] = useState('');
-  const [showDanmaku, setShowDanmaku] = useState(true);
   const [activeTab, setActiveTab] = useState<'video' | 'lyrics' | 'staff'>('video');
   const [copiedLink, setCopiedLink] = useState(false);
   const [customBvid, setCustomBvid] = useState('');
@@ -54,19 +44,6 @@ export const BilibiliPlayerModal: React.FC<BilibiliPlayerModalProps> = ({
 
   if (!isOpen || !song) return null;
 
-  const handleSendDanmaku = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!danmakuInput.trim()) return;
-    const newDanmaku = {
-      id: Date.now().toString(),
-      text: danmakuInput.trim(),
-      top: Math.floor(Math.random() * 70) + 10,
-      color: ['#66CCFF', '#EE0000', '#00FFCC', '#FFD700', '#FFFFFF', '#A855F7'][Math.floor(Math.random() * 6)],
-    };
-    setDanmakuList((prev) => [...prev, newDanmaku]);
-    setDanmakuInput('');
-  };
-
   const handleCopyShare = () => {
     const url = `https://www.bilibili.com/video/${customBvid || song.bilibiliBvid}`;
     navigator.clipboard.writeText(url);
@@ -75,7 +52,7 @@ export const BilibiliPlayerModal: React.FC<BilibiliPlayerModalProps> = ({
   };
 
   const bvid = customBvid || song.bilibiliBvid;
-  const embedUrl = `https://player.bilibili.com/player.html?bvid=${bvid}&page=1&as_wide=1&high_quality=1&danmaku=${showDanmaku ? '1' : '0'}`;
+  const embedUrl = `https://player.bilibili.com/player.html?bvid=${bvid}&page=1&as_wide=1&high_quality=1&danmaku=1`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md animate-fade-in">
@@ -140,41 +117,12 @@ export const BilibiliPlayerModal: React.FC<BilibiliPlayerModalProps> = ({
                 allowFullScreen
                 sandbox="allow-top-navigation allow-same-origin allow-forms allow-scripts"
               />
-
-              {/* Simulated Danmaku Floating Layer */}
-              {showDanmaku && (
-                <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden">
-                  {danmakuList.map((dm) => (
-                    <div
-                      key={dm.id}
-                      className="absolute whitespace-nowrap text-sm font-semibold drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] animate-danmaku"
-                      style={{
-                        top: `${dm.top}%`,
-                        color: dm.color,
-                      }}
-                    >
-                      {dm.text}
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
 
-            {/* Video Controls & Danmaku Input Bar */}
+            {/* Video Controls Bar */}
             <div className="p-3 bg-slate-900/90 border-t border-slate-800 space-y-2">
               <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setShowDanmaku(!showDanmaku)}
-                    className={`px-2 py-1 rounded text-xs font-semibold border transition-all ${
-                      showDanmaku
-                        ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300'
-                        : 'bg-slate-800 border-slate-700 text-slate-400'
-                    }`}
-                  >
-                    {showDanmaku ? '弹幕: 开' : '弹幕: 关'}
-                  </button>
-
                   <button
                     onClick={() => onPlaySynth(song)}
                     className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1.5 border transition-all ${
@@ -201,24 +149,6 @@ export const BilibiliPlayerModal: React.FC<BilibiliPlayerModalProps> = ({
                   />
                 </div>
               </div>
-
-              {/* Danmaku interactive input */}
-              <form onSubmit={handleSendDanmaku} className="flex gap-2">
-                <input
-                  type="text"
-                  value={danmakuInput}
-                  onChange={(e) => setDanmakuInput(e.target.value)}
-                  placeholder="发条弹幕为相依团队打call吧~"
-                  className="flex-1 bg-slate-800/80 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-hidden focus:border-cyan-400 transition-colors"
-                />
-                <button
-                  type="submit"
-                  className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-semibold flex items-center gap-1 shadow-sm transition-all"
-                >
-                  <Send className="w-3 h-3" />
-                  <span>发送</span>
-                </button>
-              </form>
             </div>
           </div>
 
