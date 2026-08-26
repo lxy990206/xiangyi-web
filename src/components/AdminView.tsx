@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   ShieldCheck, 
   Lock, 
@@ -34,7 +34,9 @@ import {
   Link as LinkIcon,
   Share2,
   Sliders,
-  Image as ImageIcon
+  Image as ImageIcon,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { 
@@ -103,6 +105,87 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
   const [activeAdminTab, setActiveAdminTab] = useState<
     'info' | 'songs' | 'albums' | 'collaborations' | 'members' | 'navigation_socials' | 'about_faq' | 'announcements' | 'recruitment' | 'security'
   >('info');
+
+  // Tab scroll navigation state & refs
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+  const [isDraggingTabs, setIsDraggingTabs] = useState(false);
+  const [dragStartX, setDragStartX] = useState(0);
+  const [scrollStartLeft, setScrollStartLeft] = useState(0);
+  const [dragMoved, setDragMoved] = useState(false);
+
+  // Update left/right scroll indicator arrows
+  const updateTabScrollButtons = useCallback(() => {
+    if (!tabsContainerRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = tabsContainerRef.current;
+    setCanScrollLeft(scrollLeft > 6);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 6);
+  }, []);
+
+  useEffect(() => {
+    updateTabScrollButtons();
+    const el = tabsContainerRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', updateTabScrollButtons, { passive: true });
+    window.addEventListener('resize', updateTabScrollButtons);
+    return () => {
+      el.removeEventListener('scroll', updateTabScrollButtons);
+      window.removeEventListener('resize', updateTabScrollButtons);
+    };
+  }, [updateTabScrollButtons]);
+
+  // Auto-scroll active tab into view
+  useEffect(() => {
+    const el = document.getElementById(`admin-nav-tab-${activeAdminTab}`);
+    if (el && tabsContainerRef.current) {
+      el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+  }, [activeAdminTab]);
+
+  // Handle smooth button scroll
+  const scrollTabs = (direction: 'left' | 'right') => {
+    if (!tabsContainerRef.current) return;
+    const distance = 280;
+    tabsContainerRef.current.scrollBy({
+      left: direction === 'left' ? -distance : distance,
+      behavior: 'smooth'
+    });
+  };
+
+  // Mouse wheel horizontal scroll conversion
+  const handleTabsWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (!tabsContainerRef.current) return;
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      tabsContainerRef.current.scrollLeft += e.deltaY;
+      updateTabScrollButtons();
+    }
+  };
+
+  // Mouse drag-to-scroll handlers
+  const handleTabsMouseDown = (e: React.MouseEvent) => {
+    if (!tabsContainerRef.current) return;
+    setIsDraggingTabs(true);
+    setDragStartX(e.pageX - tabsContainerRef.current.offsetLeft);
+    setScrollStartLeft(tabsContainerRef.current.scrollLeft);
+    setDragMoved(false);
+  };
+
+  const handleTabsMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingTabs || !tabsContainerRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - tabsContainerRef.current.offsetLeft;
+    const walk = (x - dragStartX) * 1.5;
+    if (Math.abs(walk) > 4) {
+      setDragMoved(true);
+    }
+    tabsContainerRef.current.scrollLeft = scrollStartLeft - walk;
+    updateTabScrollButtons();
+  };
+
+  const handleTabsMouseUpOrLeave = () => {
+    setIsDraggingTabs(false);
+  };
 
   // Notification toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -383,42 +466,91 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
         </div>
       </div>
 
-      {/* Nav Tabs within Admin */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-        {[
-          { id: 'info', label: '社团基本信息', icon: Settings, count: null },
-          { id: 'songs', label: '单曲管理', icon: Music, count: songs.length },
-          { id: 'albums', label: '专辑管理', icon: Disc3, count: albums.length },
-          { id: 'collaborations', label: '合作项目', icon: Layers, count: collaborations.length },
-          { id: 'members', label: '成员名单', icon: Users, count: members.length },
-          { id: 'navigation_socials', label: '导航与社媒工具', icon: Compass, count: (teamInfo.toolLinks || []).length },
-          { id: 'about_faq', label: '历程与问答FAQ', icon: HelpCircle, count: ((teamInfo.milestones || []).length + (teamInfo.faqs || []).length) },
-          { id: 'announcements', label: '公告管理', icon: Megaphone, count: announcements.length },
-          { id: 'recruitment', label: '招募岗位', icon: Sparkles, count: recruitmentPositions.length },
-          { id: 'security', label: '安全与密码', icon: KeyRound, count: null },
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeAdminTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveAdminTab(tab.id as any)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs shrink-0 transition-all border ${
-                isActive
-                  ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-md shadow-cyan-500/10'
-                  : 'bg-slate-900/80 text-slate-400 hover:text-slate-200 border-slate-800 hover:border-slate-700'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span>{tab.label}</span>
-              {tab.count !== null && (
-                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 font-mono">
-                  {tab.count}
-                </span>
-              )}
-            </button>
-          );
-        })}
+      {/* Nav Tabs within Admin - with smooth left/right arrows, drag-to-scroll, wheel scroll & touch swipe */}
+      <div className="relative flex items-center w-full">
+        {/* Left Scroll Arrow */}
+        {canScrollLeft && (
+          <button
+            type="button"
+            onClick={() => scrollTabs('left')}
+            className="absolute -left-3 z-20 p-2 rounded-full bg-slate-900/95 text-cyan-300 border border-cyan-500/40 shadow-xl hover:bg-slate-800 hover:scale-105 transition-all cursor-pointer flex items-center justify-center backdrop-blur-xs"
+            title="向左滚动选项"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+        )}
+
+        {/* Scrollable Tabs Track */}
+        <div
+          ref={tabsContainerRef}
+          onWheel={handleTabsWheel}
+          onMouseDown={handleTabsMouseDown}
+          onMouseMove={handleTabsMouseMove}
+          onMouseUp={handleTabsMouseUpOrLeave}
+          onMouseLeave={handleTabsMouseUpOrLeave}
+          className={`flex items-center gap-2 overflow-x-auto pb-1.5 pt-0.5 w-full scroll-smooth select-none cursor-grab active:cursor-grabbing overscroll-x-contain touch-pan-x transition-all ${
+            isDraggingTabs ? 'cursor-grabbing' : ''
+          }`}
+          style={{ 
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(6, 182, 212, 0.4) rgba(15, 23, 42, 0.6)' 
+          }}
+        >
+          {[
+            { id: 'info', label: '社团基本信息', icon: Settings, count: null },
+            { id: 'songs', label: '单曲管理', icon: Music, count: songs.length },
+            { id: 'albums', label: '专辑管理', icon: Disc3, count: albums.length },
+            { id: 'collaborations', label: '合作项目', icon: Layers, count: collaborations.length },
+            { id: 'members', label: '成员名单', icon: Users, count: members.length },
+            { id: 'navigation_socials', label: '导航与社媒工具', icon: Compass, count: (teamInfo.toolLinks || []).length },
+            { id: 'about_faq', label: '历程与问答FAQ', icon: HelpCircle, count: ((teamInfo.milestones || []).length + (teamInfo.faqs || []).length) },
+            { id: 'announcements', label: '公告管理', icon: Megaphone, count: announcements.length },
+            { id: 'recruitment', label: '招募岗位', icon: Sparkles, count: recruitmentPositions.length },
+            { id: 'security', label: '安全与密码', icon: KeyRound, count: null },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeAdminTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                id={`admin-nav-tab-${tab.id}`}
+                type="button"
+                onClick={() => {
+                  if (!dragMoved) {
+                    setActiveAdminTab(tab.id as any);
+                  }
+                }}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs shrink-0 transition-all border cursor-pointer ${
+                  isActive
+                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-md shadow-cyan-500/10 scale-[1.02]'
+                    : 'bg-slate-900/80 text-slate-400 hover:text-slate-200 border-slate-800 hover:border-slate-700 hover:bg-slate-850'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span className="whitespace-nowrap">{tab.label}</span>
+                {tab.count !== null && (
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    isActive ? 'bg-cyan-500/30 text-cyan-200' : 'bg-slate-800 text-slate-400'
+                  }`}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right Scroll Arrow */}
+        {canScrollRight && (
+          <button
+            type="button"
+            onClick={() => scrollTabs('right')}
+            className="absolute -right-3 z-20 p-2 rounded-full bg-slate-900/95 text-cyan-300 border border-cyan-500/40 shadow-xl hover:bg-slate-800 hover:scale-105 transition-all cursor-pointer flex items-center justify-center backdrop-blur-xs"
+            title="向右滚动选项"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* ========================================================= */}
