@@ -1,6 +1,6 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-08-26T20:17:32.265Z (2026/8/27 04:17:32)
+ * 自动同步生成时间: 2026-08-26T20:19:38.456Z (2026/8/27 04:19:38)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
@@ -714,10 +714,10 @@ export const MEMBERS_DATA: Member[] = [
     "id": "mem-1787763814328",
     "name": "小精灵lxy",
     "avatar": "https://i0.hdslb.com/bfs/face/7bd7aa7793f6e99a23b12a44a1ad621cd8738f26.jpg",
-    "role": "哔站官方运营",
+    "role": "哔站官方运营/网站开发/bot开发者",
     "department": "admin",
     "badge": "运营部",
-    "bio": "哔站官方运营者",
+    "bio": "哔站官方运营者，擅长后勤，各种与代码相关的开发（网站，bot）",
     "representativeWorks": [
       "《瞬时爱恋》"
     ],
