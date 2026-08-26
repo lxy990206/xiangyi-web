@@ -2829,7 +2829,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
                 <label className="block font-semibold text-slate-300 mb-1">主要职责 (每行一条)</label>
                 <textarea
                   rows={2}
-                  value={editingRec.responsibilities.join('\n')}
+                  value={(editingRec.responsibilities || []).join('\n')}
                   onChange={(e) => setEditingRec({
                     ...editingRec,
                     responsibilities: e.target.value.split('\n').filter(Boolean)
@@ -2842,7 +2842,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
                 <label className="block font-semibold text-slate-300 mb-1">福利与支持 (每行一条)</label>
                 <textarea
                   rows={2}
-                  value={editingRec.perks.join('\n')}
+                  value={(editingRec.perks || []).join('\n')}
                   onChange={(e) => setEditingRec({
                     ...editingRec,
                     perks: e.target.value.split('\n').filter(Boolean)
