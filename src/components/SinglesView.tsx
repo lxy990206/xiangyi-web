@@ -1,18 +1,17 @@
 import React, { useState, useRef } from 'react';
-import { 
-  Music2, 
-  Search, 
-  Tv, 
-  Play, 
-  Pause, 
-  FileText, 
-  Sparkles, 
-  Layers, 
-  Send, 
-  Copy, 
-  Check, 
-  ExternalLink, 
-  Share2, 
+import {
+  Music2,
+  Search,
+  Tv,
+  Play,
+  Pause,
+  FileText,
+  Sparkles,
+  Layers,
+  Copy,
+  Check,
+  ExternalLink,
+  Share2,
   Maximize2,
   X,
   Disc3,
@@ -41,14 +40,6 @@ export const SinglesView: React.FC<SinglesViewProps> = ({
   
   // Active song selected for the in-page "套娃演示" Bilibili embed player
   const [nestedPlayerSong, setNestedPlayerSong] = useState<Song>(songs[0] || {} as Song);
-  const [nestedShowDanmaku, setNestedShowDanmaku] = useState(true);
-  const [danmakuInput, setDanmakuInput] = useState('');
-  const [customDanmaku, setCustomDanmaku] = useState<{ id: string; text: string; top: number; color: string }[]>([
-    { id: '1', text: '相依团队出新歌必支持！', top: 20, color: '#66CCFF' },
-    { id: '2', text: '高音部分调教太绝了！', top: 40, color: '#00FFCC' },
-    { id: '3', text: '这首曲绘真是壁纸级别！', top: 60, color: '#FFD700' },
-    { id: '4', text: '【套娃演示成功】B站内嵌播放丝滑！', top: 80, color: '#EE0000' }
-  ]);
   const [copiedBvid, setCopiedBvid] = useState(false);
 
   const nestedPlayerRef = useRef<HTMLDivElement>(null);
@@ -74,21 +65,6 @@ export const SinglesView: React.FC<SinglesViewProps> = ({
     if (nestedPlayerRef.current) {
       nestedPlayerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  };
-
-  const handleSendNestedDanmaku = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!danmakuInput.trim()) return;
-    setCustomDanmaku((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        text: danmakuInput.trim(),
-        top: Math.floor(Math.random() * 65) + 15,
-        color: ['#66CCFF', '#EE0000', '#00FFCC', '#FFD700', '#FFFFFF', '#A855F7'][Math.floor(Math.random() * 6)]
-      }
-    ]);
-    setDanmakuInput('');
   };
 
   const handleCopyBv = (bvid: string) => {
@@ -398,70 +374,27 @@ export const SinglesView: React.FC<SinglesViewProps> = ({
 
         {/* Embedded Iframe Container & Interactive Suite */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-          {/* Main Video Box with Danmaku Simulation */}
+          {/* Main Video Box */}
           <div className="lg:col-span-8 bg-black rounded-xl overflow-hidden border border-slate-800 flex flex-col justify-between">
             <div className="relative aspect-video w-full bg-slate-950 overflow-hidden flex items-center justify-center">
               {/* The Iframe */}
               <iframe
-                src={`https://player.bilibili.com/player.html?bvid=${nestedPlayerSong.bilibiliBvid}&page=1&as_wide=1&high_quality=1&danmaku=${nestedShowDanmaku ? '1' : '0'}`}
+                src={`https://player.bilibili.com/player.html?bvid=${nestedPlayerSong.bilibiliBvid}&page=1&as_wide=1&high_quality=1&danmaku=1`}
                 title={nestedPlayerSong.title}
                 className="w-full h-full border-0 relative z-10"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 sandbox="allow-top-navigation allow-same-origin allow-forms allow-scripts"
               />
-
-              {/* Danmaku layer */}
-              {nestedShowDanmaku && (
-                <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden">
-                  {customDanmaku.map((dm) => (
-                    <div
-                      key={dm.id}
-                      className="absolute whitespace-nowrap text-xs sm:text-sm font-semibold drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] animate-danmaku"
-                      style={{ top: `${dm.top}%`, color: dm.color }}
-                    >
-                      {dm.text}
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
 
-            {/* Danmaku bar */}
+            {/* Video info bar */}
             <div className="p-3 bg-slate-900 border-t border-slate-800 space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <button
-                  onClick={() => setNestedShowDanmaku(!nestedShowDanmaku)}
-                  className={`px-2.5 py-1 rounded text-xs font-semibold border transition-all ${
-                    nestedShowDanmaku
-                      ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300'
-                      : 'bg-slate-800 border-slate-700 text-slate-400'
-                  }`}
-                >
-                  {nestedShowDanmaku ? '弹幕: 已开启' : '弹幕: 已关闭'}
-                </button>
-
                 <span className="text-slate-400 font-mono text-[11px]">
                   BV: {nestedPlayerSong.bilibiliBvid}
                 </span>
               </div>
-
-              <form onSubmit={handleSendNestedDanmaku} className="flex gap-2">
-                <input
-                  type="text"
-                  value={danmakuInput}
-                  onChange={(e) => setDanmakuInput(e.target.value)}
-                  placeholder="在此输入弹幕，在上方视频实时飘过..."
-                  className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-hidden focus:border-cyan-400"
-                />
-                <button
-                  type="submit"
-                  className="px-3.5 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center gap-1 shadow-sm transition-colors cursor-pointer"
-                >
-                  <Send className="w-3 h-3" />
-                  <span>发弹幕</span>
-                </button>
-              </form>
             </div>
           </div>
 

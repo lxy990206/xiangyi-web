@@ -35,6 +35,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
   playingSongId,
 }) => {
   const { songs, teamInfo } = useData();
+  const recruitmentBanner = teamInfo.recruitmentBanner || {
+    enabled: true,
+    badge: '急招中',
+    title: '相依团队2025春季企划 · 招募曲绘师 / PV动效师',
+    desc: '多首原创洛天依/星尘单曲企划分镜已就绪，欢迎携作品投递交流！',
+    buttonText: '查看招募详情'
+  };
   const featuredSongs = songs.filter((s) => s.isFeatured).length > 0
     ? songs.filter((s) => s.isFeatured)
     : songs.slice(0, 4);
@@ -313,21 +320,22 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
       </section>
 
-      {/* 5. Urgent Recruitment Callout Banner */}
+      {/* 5. Urgent Recruitment Callout Banner (数据可在维护后台「社团基本信息」中管理) */}
+      {recruitmentBanner.enabled && (
       <section className="p-5 rounded-2xl bg-gradient-to-r from-red-950/40 via-purple-950/30 to-slate-900 border border-red-500/30 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <div className="w-12 h-12 rounded-xl bg-red-500/20 border border-red-500/40 flex items-center justify-center shrink-0">
             <Users className="w-6 h-6 text-red-400 animate-pulse" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500 text-white">急招中</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500 text-white">{recruitmentBanner.badge}</span>
               <h4 className="font-bold text-sm sm:text-base text-white">
-                相依团队2025春季企划 · 招募曲绘师 / PV动效师
+                {recruitmentBanner.title}
               </h4>
             </div>
             <p className="text-xs text-slate-300 mt-1">
-              多首原创洛天依/星尘单曲企划分镜已就绪，欢迎携作品投递交流！
+              {recruitmentBanner.desc}
             </p>
           </div>
         </div>
@@ -336,10 +344,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
           onClick={onOpenRecruitment}
           className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-red-500/20 transition-all shrink-0 cursor-pointer"
         >
-          <span>查看招募详情</span>
+          <span>{recruitmentBanner.buttonText}</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </button>
       </section>
+      )}
     </div>
   );
 };

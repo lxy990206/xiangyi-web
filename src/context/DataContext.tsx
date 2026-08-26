@@ -88,6 +88,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           stats: { ...DEFAULT_TEAM_INFO.stats, ...(parsed.stats || {}) },
           socials: { ...DEFAULT_TEAM_INFO.socials, ...(parsed.socials || {}) },
           navigationConfig: { ...DEFAULT_TEAM_INFO.navigationConfig, ...(parsed.navigationConfig || {}) },
+          recruitmentBanner: { ...DEFAULT_TEAM_INFO.recruitmentBanner, ...(parsed.recruitmentBanner || {}) },
           milestones: parsed.milestones?.length ? parsed.milestones : DEFAULT_TEAM_INFO.milestones,
           faqs: parsed.faqs?.length ? parsed.faqs : DEFAULT_TEAM_INFO.faqs,
           toolLinks: parsed.toolLinks?.length ? parsed.toolLinks : DEFAULT_TEAM_INFO.toolLinks,

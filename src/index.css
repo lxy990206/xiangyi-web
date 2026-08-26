@@ -1,22 +1,6 @@
 @import "tailwindcss";
 
 @layer utilities {
-  /* Danmaku flying animation across video */
-  @keyframes danmaku-fly {
-    0% {
-      transform: translateX(100%);
-      left: 100%;
-    }
-    100% {
-      transform: translateX(-100%);
-      left: -10%;
-    }
-  }
-
-  .animate-danmaku {
-    animation: danmaku-fly 8s linear infinite;
-  }
-
   .animate-spin-slow {
     animation: spin 12s linear infinite;
   }

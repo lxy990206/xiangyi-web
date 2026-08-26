@@ -66,14 +66,15 @@ import {
   FaqItem,
   Department 
 } from '../types';
-import { 
-  testGitHubRepo, 
-  syncDataToGitHub, 
-  downloadTsFile, 
+import {
+  testGitHubRepo,
+  syncDataToGitHub,
+  downloadTsFile,
   generateTeamDataTsCode,
   RepoTestResult,
-  SyncResult 
+  SyncResult
 } from '../utils/githubSync';
+import { fetchBilibiliVideoInfo, fetchBilibiliUserInfo } from '../utils/bilibiliFetch';
 import { audioEngine } from '../utils/audioSynthesizer';
 
 interface AdminViewProps {
@@ -116,6 +117,15 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
     importDataJSON,
     resetToDefaults
   } = useData();
+
+  // 首页底部急招横幅配置（含旧数据兜底）
+  const recruitmentBannerCfg = teamInfo.recruitmentBanner || {
+    enabled: true,
+    badge: '急招中',
+    title: '相依团队2025春季企划 · 招募曲绘师 / PV动效师',
+    desc: '多首原创洛天依/星尘单曲企划分镜已就绪，欢迎携作品投递交流！',
+    buttonText: '查看招募详情'
+  };
 
   // Login form state
   const [username, setUsername] = useState('admin');
@@ -443,6 +453,122 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
     }
   };
 
+  // 自动获取B站视频封面（按编辑中的 BV号）
+  const [isFetchingCover, setIsFetchingCover] = useState(false);
+
+  const handleFetchSongCover = async () => {
+    if (!editingSong?.bilibiliBvid?.trim()) {
+      showToast('请先填写 B站 BV号，再自动获取封面');
+      return;
+    }
+    setIsFetchingCover(true);
+    try {
+      const info = await fetchBilibiliVideoInfo(editingSong.bilibiliBvid);
+      if (!info.coverUrl) {
+        throw new Error('接口未返回封面地址');
+      }
+      setEditingSong({ ...editingSong, coverUrl: info.coverUrl });
+      showToast(`封面获取成功：《${info.title}》`);
+    } catch (e: any) {
+      showToast(`封面获取失败: ${e?.message || '未知错误'}`);
+    } finally {
+      setIsFetchingCover(false);
+    }
+  };
+
+  // 自动获取B站用户头像（按成员空间链接 / UID）
+  const [isFetchingAvatar, setIsFetchingAvatar] = useState(false);
+
+  const handleFetchMemberAvatar = async () => {
+    const source = editingMember?.socialLinks?.bilibili || '';
+    if (!source.trim()) {
+      showToast('请先填写成员的 B站个人空间链接（或 UID），再获取头像');
+      return;
+    }
+    setIsFetchingAvatar(true);
+    try {
+      const user = await fetchBilibiliUserInfo(source);
+      if (!user.face) {
+        throw new Error('接口未返回头像地址');
+      }
+      setEditingMember({ ...editingMember, avatar: user.face });
+      showToast(`头像获取成功：${user.name || 'B站用户'} 的头像`);
+    } catch (e: any) {
+      showToast(`头像获取失败: ${e?.message || '未知错误'}`);
+    } finally {
+      setIsFetchingAvatar(false);
+    }
+  };
+
+  // ===== 退出维护界面时自动触发 GitHub 全量数据同步 =====
+  // 保持仓库源码与前台实际展示数据一致，避免更新逻辑代码时前端修改数据被重置
+  const latestDataRef = useRef({ teamInfo, songs, albums, collaborations, members, announcements, recruitmentPositions });
+  latestDataRef.current = { teamInfo, songs, albums, collaborations, members, announcements, recruitmentPositions };
+
+  const wasAuthenticatedRef = useRef(false);
+  const exitSyncDoneRef = useRef(false);
+
+  useEffect(() => {
+    if (isAdminAuthenticated) {
+      wasAuthenticatedRef.current = true;
+      // 每次进入后台会话时重置标记，保证「每次退出」都能触发一次自动同步
+      exitSyncDoneRef.current = false;
+    }
+  }, [isAdminAuthenticated]);
+
+  // 执行退出时的自动全量同步（silent = 组件已卸载，静默执行）
+  const performExitSync = useCallback(async (silent: boolean) => {
+    if (exitSyncDoneRef.current) return;
+    exitSyncDoneRef.current = true;
+
+    const token = (localStorage.getItem('xiangyi_github_token') || '').trim();
+    const repo = (localStorage.getItem('xiangyi_github_repo') || '').trim();
+    if (!token || !repo) {
+      if (!silent) showToast('未配置 GitHub Token / 仓库，已跳过退出自动同步');
+      return;
+    }
+
+    const branch = (localStorage.getItem('xiangyi_github_branch') || 'main').trim() || 'main';
+    const filePath = (localStorage.getItem('xiangyi_github_filepath') || 'src/data/teamData.ts').trim() || 'src/data/teamData.ts';
+    const nowStr = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+
+    try {
+      await syncDataToGitHub(
+        {
+          token,
+          repo,
+          branch,
+          filePath,
+          commitMessage: `chore(data): 退出维护后台自动全量同步 [${nowStr}]`
+        },
+        latestDataRef.current
+      );
+      if (!silent) showToast('✅ 已自动同步全量数据至 GitHub！');
+      console.log('[AutoSync] 退出维护后台：全量数据已同步至 GitHub');
+    } catch (e: any) {
+      if (!silent) showToast(`自动同步失败: ${e?.message || '未知错误'}`);
+      console.warn('[AutoSync] 退出维护后台自动同步失败:', e?.message);
+    }
+  }, []);
+
+  // 组件卸载（导航离开维护界面）时自动静默同步
+  useEffect(() => {
+    return () => {
+      if (wasAuthenticatedRef.current) {
+        performExitSync(true);
+      }
+    };
+  }, [performExitSync]);
+
+  // 点击「退出后台」：先自动全量同步，再注销登录
+  const handleLogoutWithAutoSync = async () => {
+    if (!exitSyncDoneRef.current) {
+      showToast('正在自动同步全量数据至 GitHub...');
+      await performExitSync(false);
+    }
+    adminLogout();
+  };
+
   // Download teamData.ts
   const handleDownloadTsFile = () => {
     const code = generateTeamDataTsCode({
@@ -481,6 +607,14 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
   if (!isAdminAuthenticated) {
     return (
       <div className="max-w-md mx-auto my-12 p-6 sm:p-8 rounded-3xl bg-slate-900 border border-cyan-500/30 shadow-2xl shadow-cyan-500/10 text-slate-100 animate-fade-in relative overflow-hidden">
+        {/* Toast Notification (登录页也渲染，便于展示退出自动同步结果) */}
+        {toastMessage && (
+          <div className="fixed bottom-20 right-6 z-50 px-4 py-2.5 rounded-xl bg-cyan-950 border border-cyan-500 text-cyan-200 text-sm shadow-2xl flex items-center gap-2 animate-bounce">
+            <CheckCircle2 className="w-4 h-4 text-cyan-400" />
+            <span>{toastMessage}</span>
+          </div>
+        )}
+
         {/* Ambient Top Glow */}
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
@@ -643,7 +777,8 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
           </button>
 
           <button
-            onClick={adminLogout}
+            onClick={handleLogoutWithAutoSync}
+            title="退出前将自动把全量数据同步至 GitHub，保持仓库与前台数据一致"
             className="px-3 py-1.5 rounded-xl bg-red-950/40 hover:bg-red-900/60 text-red-300 border border-red-500/30 text-xs font-bold flex items-center gap-1.5 transition-all"
           >
             <LogOut className="w-3.5 h-3.5" />
@@ -831,6 +966,112 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
                 })}
                 className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:border-cyan-500 focus:outline-none font-mono"
               />
+            </div>
+          </div>
+
+          {/* 首页底部急招横幅管理区块 */}
+          <div className="pt-4 border-t border-slate-800 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-red-300 flex items-center gap-2">
+                <Megaphone className="w-4 h-4 text-red-400" />
+                <span>首页底部急招横幅管理</span>
+              </h3>
+              <span className="text-[11px] text-slate-400">
+                控制首页底部的红色急招招募横幅内容
+              </span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+              {/* 启用开关 */}
+              <label className="flex items-center justify-between cursor-pointer">
+                <div className="flex items-center gap-2">
+                  <Megaphone className="w-4 h-4 text-cyan-400" />
+                  <span className="text-xs font-bold text-white">在首页显示急招横幅</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={recruitmentBannerCfg.enabled}
+                  onChange={(e) => updateTeamInfo({
+                    ...teamInfo,
+                    recruitmentBanner: { ...recruitmentBannerCfg, enabled: e.target.checked }
+                  })}
+                  className="w-4 h-4 accent-cyan-500 cursor-pointer"
+                />
+              </label>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">徽章文字 (红色小标签)</label>
+                  <input
+                    type="text"
+                    value={recruitmentBannerCfg.badge}
+                    onChange={(e) => updateTeamInfo({
+                      ...teamInfo,
+                      recruitmentBanner: { ...recruitmentBannerCfg, badge: e.target.value }
+                    })}
+                    placeholder="如: 急招中"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:border-red-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">按钮文字</label>
+                  <input
+                    type="text"
+                    value={recruitmentBannerCfg.buttonText}
+                    onChange={(e) => updateTeamInfo({
+                      ...teamInfo,
+                      recruitmentBanner: { ...recruitmentBannerCfg, buttonText: e.target.value }
+                    })}
+                    placeholder="如: 查看招募详情"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:border-red-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">横幅标题</label>
+                  <input
+                    type="text"
+                    value={recruitmentBannerCfg.title}
+                    onChange={(e) => updateTeamInfo({
+                      ...teamInfo,
+                      recruitmentBanner: { ...recruitmentBannerCfg, title: e.target.value }
+                    })}
+                    placeholder="如: 相依团队2025春季企划 · 招募曲绘师 / PV动效师"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:border-red-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">横幅描述文字</label>
+                  <input
+                    type="text"
+                    value={recruitmentBannerCfg.desc}
+                    onChange={(e) => updateTeamInfo({
+                      ...teamInfo,
+                      recruitmentBanner: { ...recruitmentBannerCfg, desc: e.target.value }
+                    })}
+                    placeholder="如: 多首原创洛天依/星尘单曲企划分镜已就绪，欢迎携作品投递交流！"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:border-red-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* 实时预览 */}
+              <div className="p-3 rounded-xl bg-gradient-to-r from-red-950/40 via-purple-950/30 to-slate-900 border border-red-500/30 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500 text-white shrink-0">
+                    {recruitmentBannerCfg.badge}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-white truncate">{recruitmentBannerCfg.title}</p>
+                    <p className="text-[10px] text-slate-300 truncate">{recruitmentBannerCfg.desc}</p>
+                  </div>
+                </div>
+                <span className="px-3 py-1 rounded-lg bg-red-500 text-white text-[10px] font-bold shrink-0">
+                  {recruitmentBannerCfg.buttonText}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -2414,7 +2655,8 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
                     </span>
                   </h2>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    将后台管理界面的所有修改一键推送至 GitHub 源码（<code className="text-cyan-300 font-mono">src/data/teamData.ts</code>），杜绝部署更新导致数据丢失
+                    将后台管理界面的所有修改一键推送至 GitHub 源码（<code className="text-cyan-300 font-mono">src/data/teamData.ts</code>），杜绝部署更新导致数据丢失。
+                    <span className="text-cyan-300">每次退出维护后台或离开维护界面时，将自动触发一次全量数据同步</span>，保持仓库与前台实际数据一致。
                   </p>
                 </div>
               </div>
@@ -2894,12 +3136,43 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
 
               <div className="sm:col-span-2">
                 <label className="block font-semibold text-slate-300 mb-1">封面图片 URL (防盗链已自动配置)</label>
-                <input
-                  type="text"
-                  value={editingSong.coverUrl}
-                  onChange={(e) => setEditingSong({ ...editingSong, coverUrl: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 font-mono text-[11px]"
-                />
+                <div className="flex gap-2 items-start">
+                  <input
+                    type="text"
+                    value={editingSong.coverUrl}
+                    onChange={(e) => setEditingSong({ ...editingSong, coverUrl: e.target.value })}
+                    className="flex-1 px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 font-mono text-[11px]"
+                  />
+                  {/* 自动获取B站视频封面 */}
+                  <button
+                    type="button"
+                    onClick={handleFetchSongCover}
+                    disabled={isFetchingCover}
+                    title="根据上方 B站 BV号 自动获取该视频的高清封面图"
+                    className={`px-3 py-2 rounded-xl border text-[11px] font-bold flex items-center gap-1.5 shrink-0 transition-all ${
+                      isFetchingCover
+                        ? 'bg-slate-800 border-slate-700 text-slate-400 cursor-wait'
+                        : 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/30 cursor-pointer'
+                    }`}
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    <span>{isFetchingCover ? '获取中...' : '自动获取封面'}</span>
+                  </button>
+                </div>
+                {/* 封面实时预览 */}
+                {editingSong.coverUrl && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <img
+                      src={editingSong.coverUrl}
+                      alt="封面预览"
+                      referrerPolicy="no-referrer"
+                      className="w-28 aspect-video object-cover rounded-lg border border-slate-700 bg-slate-950"
+                    />
+                    <span className="text-[10px] text-slate-500 leading-relaxed">
+                      封面实时预览<br />来源：B站视频高清封面直链
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -3200,19 +3473,50 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
                     ...editingMember,
                     socialLinks: { ...editingMember.socialLinks, bilibili: e.target.value }
                   })}
-                  placeholder="https://space.bilibili.com/..."
+                  placeholder="https://space.bilibili.com/... 或直接填 UID 数字"
                   className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 font-mono text-[11px]"
                 />
               </div>
 
               <div>
                 <label className="block font-semibold text-slate-300 mb-1">头像图片 URL</label>
-                <input
-                  type="text"
-                  value={editingMember.avatar}
-                  onChange={(e) => setEditingMember({ ...editingMember, avatar: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 font-mono text-[11px]"
-                />
+                <div className="flex gap-2 items-start">
+                  <input
+                    type="text"
+                    value={editingMember.avatar}
+                    onChange={(e) => setEditingMember({ ...editingMember, avatar: e.target.value })}
+                    className="flex-1 px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 font-mono text-[11px]"
+                  />
+                  {/* 自动获取B站用户头像 */}
+                  <button
+                    type="button"
+                    onClick={handleFetchMemberAvatar}
+                    disabled={isFetchingAvatar}
+                    title="根据上方 B站空间链接 (或 UID) 自动获取该用户的最新头像"
+                    className={`px-3 py-2 rounded-xl border text-[11px] font-bold flex items-center gap-1.5 shrink-0 transition-all ${
+                      isFetchingAvatar
+                        ? 'bg-slate-800 border-slate-700 text-slate-400 cursor-wait'
+                        : 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/30 cursor-pointer'
+                    }`}
+                  >
+                    <UserCheck className="w-3.5 h-3.5" />
+                    <span>{isFetchingAvatar ? '获取中...' : '自动获取头像'}</span>
+                  </button>
+                </div>
+                {/* 头像实时预览 */}
+                {editingMember.avatar && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <img
+                      src={editingMember.avatar}
+                      alt="头像预览"
+                      referrerPolicy="no-referrer"
+                      className="w-10 h-10 rounded-full object-cover border border-slate-700 bg-slate-950"
+                    />
+                    <span className="text-[10px] text-slate-500 leading-relaxed">
+                      头像实时预览<br />来源：B站用户头像直链
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">

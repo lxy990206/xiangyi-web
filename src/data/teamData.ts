@@ -42,6 +42,13 @@ export const TEAM_INFO = {
     recruitmentTitle: '招募中心',
     aboutTitle: '关于我们'
   },
+  recruitmentBanner: {
+    enabled: true,
+    badge: '急招中',
+    title: '相依团队2025春季企划 · 招募曲绘师 / PV动效师',
+    desc: '多首原创洛天依/星尘单曲企划分镜已就绪，欢迎携作品投递交流！',
+    buttonText: '查看招募详情'
+  },
   milestones: [
     { id: 'm-1', year: '2025.09.06', title: '相依团队正式创立', desc: '由多位中文Vocaloid音乐与ACE调校爱好者聚首创立，确立“为爱发电，相依同行”的社团理念。' },
     { id: 'm-2', year: '2025.10.03', title: '首支原创单曲《依你共鸣》', desc: '相依社成立首支原创纪念曲于Bilibili正式上线，收获广大中文V家听众的好评。' },
