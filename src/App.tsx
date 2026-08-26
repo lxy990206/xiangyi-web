@@ -60,7 +60,7 @@ function AppContent() {
     } else {
       setCurrentAudioSong(song);
       setIsAudioBarVisible(true);
-      audioEngine.playSongPreview(song.id, song.genre);
+      audioEngine.playSongPreview(song.id, song.genre, song.audioUrl);
     }
   };
 

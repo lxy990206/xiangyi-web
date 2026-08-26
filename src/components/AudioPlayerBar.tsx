@@ -9,11 +9,12 @@ import {
   Tv, 
   FileText, 
   X, 
-  Sparkles,
-  Repeat
+  Music,
+  Headphones
 } from 'lucide-react';
 import { Song } from '../types';
-import { SONGS_DATA } from '../data/teamData';
+import { useData } from '../context/DataContext';
+import { audioEngine } from '../utils/audioSynthesizer';
 
 interface AudioPlayerBarProps {
   currentSong: Song | null;
@@ -34,13 +35,39 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   onOpenLyrics,
   onCloseBar,
 }) => {
+  const { songs } = useData();
   const [progress, setProgress] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
+  const [currentTimeStr, setCurrentTimeStr] = useState('0:00');
+  const [durationStr, setDurationStr] = useState('0:00');
 
-  // Simulated progress timer when synth is playing
+  const formatTime = (secs: number) => {
+    if (!secs || isNaN(secs) || secs <= 0) return '0:00';
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  // Connect to audioEngine progress updates
+  useEffect(() => {
+    audioEngine.setProgressCallback((cur, dur, pct) => {
+      setProgress(pct);
+      setCurrentTimeStr(formatTime(cur));
+      if (dur > 0) {
+        setDurationStr(formatTime(dur));
+      }
+    });
+
+    return () => {
+      audioEngine.setProgressCallback(null);
+    };
+  }, []);
+
+  // Simulated progress timer when synth is playing without real audio
   useEffect(() => {
     let interval: number;
-    if (isPlaying) {
+    const status = audioEngine.getStatus();
+    if (isPlaying && !status.isRealAudio) {
       interval = window.setInterval(() => {
         setProgress((prev) => (prev >= 100 ? 0 : prev + 0.8));
       }, 300);
@@ -50,43 +77,61 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
 
   if (!currentSong) return null;
 
+  const songList = songs.length > 0 ? songs : [currentSong];
+
   const handleNext = () => {
-    const currentIndex = SONGS_DATA.findIndex((s) => s.id === currentSong.id);
-    const nextIndex = (currentIndex + 1) % SONGS_DATA.length;
-    onSelectSong(SONGS_DATA[nextIndex]);
+    const currentIndex = songList.findIndex((s) => s.id === currentSong.id);
+    const nextIndex = (currentIndex + 1) % songList.length;
+    onSelectSong(songList[nextIndex]);
     setProgress(0);
   };
 
   const handlePrev = () => {
-    const currentIndex = SONGS_DATA.findIndex((s) => s.id === currentSong.id);
-    const prevIndex = (currentIndex - 1 + SONGS_DATA.length) % SONGS_DATA.length;
-    onSelectSong(SONGS_DATA[prevIndex]);
+    const currentIndex = songList.findIndex((s) => s.id === currentSong.id);
+    const prevIndex = (currentIndex - 1 + songList.length) % songList.length;
+    onSelectSong(songList[prevIndex]);
     setProgress(0);
   };
+
+  const handleToggleMute = () => {
+    if (isMuted) {
+      audioEngine.setVolume(0.8);
+      setIsMuted(false);
+    } else {
+      audioEngine.setVolume(0);
+      setIsMuted(true);
+    }
+  };
+
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const newPct = Math.min(Math.max((clickX / rect.width) * 100, 0), 100);
+    setProgress(newPct);
+    audioEngine.seek(newPct);
+  };
+
+  const hasCustomAudio = Boolean(currentSong.audioUrl && currentSong.audioUrl.trim().length > 0);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-cyan-500/30 px-4 py-2.5 shadow-2xl text-slate-100 animate-slide-up">
       {/* Top progress bar slider */}
       <div 
-        className="absolute top-0 left-0 right-0 h-1 bg-slate-800 cursor-pointer group"
-        onClick={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect();
-          const clickX = e.clientX - rect.left;
-          const newPct = (clickX / rect.width) * 100;
-          setProgress(Math.min(Math.max(newPct, 0), 100));
-        }}
+        className="absolute top-0 left-0 right-0 h-1.5 bg-slate-800 cursor-pointer group"
+        onClick={handleSeek}
+        title="点击调整播放进度"
       >
         <div 
-          className="h-full bg-gradient-to-r from-cyan-400 to-purple-500 transition-all duration-150 relative"
+          className="h-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 transition-all duration-100 relative"
           style={{ width: `${progress}%` }}
         >
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white opacity-0 group-hover:opacity-100 shadow-md" />
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white opacity-0 group-hover:opacity-100 shadow-md transition-opacity" />
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 pt-1">
         {/* Left: Song Profile */}
-        <div className="flex items-center gap-3 min-w-0 max-w-[280px] sm:max-w-xs">
+        <div className="flex items-center gap-3 min-w-0 max-w-[260px] sm:max-w-xs">
           <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-slate-700 bg-slate-950">
             <img 
               src={currentSong.coverUrl} 
@@ -117,13 +162,22 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                 {currentSong.singer}
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 truncate">
-              {currentSong.staff.composition} · {currentSong.genre}
-            </p>
+            <div className="flex items-center gap-1.5 text-[11px] text-slate-400 truncate">
+              <span>{currentSong.staff.composition} · {currentSong.genre}</span>
+              {hasCustomAudio ? (
+                <span className="inline-flex items-center gap-0.5 text-[9px] px-1 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shrink-0">
+                  <Headphones className="w-2.5 h-2.5" /> 原声
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-0.5 text-[9px] px-1 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 shrink-0">
+                  <Music className="w-2.5 h-2.5" /> 旋律
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Center: Playback Controls */}
+        {/* Center: Playback Controls & Time */}
         <div className="flex flex-col items-center gap-1">
           <div className="flex items-center gap-3">
             <button
@@ -149,7 +203,21 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
             >
               <SkipForward className="w-4 h-4" />
             </button>
+
+            <button
+              onClick={handleToggleMute}
+              className="p-1.5 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors hidden sm:inline-flex"
+              title={isMuted ? '取消静音' : '静音'}
+            >
+              {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4" />}
+            </button>
           </div>
+
+          {hasCustomAudio && (
+            <div className="text-[10px] text-slate-400 font-mono hidden md:block">
+              {currentTimeStr} / {durationStr !== '0:00' ? durationStr : currentSong.duration}
+            </div>
+          )}
         </div>
 
         {/* Right: Actions */}
@@ -187,3 +255,4 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
     </div>
   );
 };
+

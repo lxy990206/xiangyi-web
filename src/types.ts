@@ -50,6 +50,9 @@ export interface Song {
   releaseDate: string;
   duration: string;
   coverUrl: string;
+  audioUrl?: string;          // 试听音频源 (MP3/WAV/DataURL/在线音频直链)
+  audioDuration?: string;     // 试听时长或标注
+  audioMode?: 'custom' | 'synth'; // 音频播放模式 (自定义音频 / 网页旋律合成器)
   bilibiliBvid: string;
   bilibiliEmbedUrl?: string;
   playCount: string;
@@ -75,6 +78,7 @@ export interface AlbumTrack {
   composer: string;
   lyricist: string;
   isOriginal: boolean;
+  audioUrl?: string;
 }
 
 export type SongItem = Song;

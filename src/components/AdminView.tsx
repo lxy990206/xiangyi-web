@@ -36,7 +36,21 @@ import {
   Sliders,
   Image as ImageIcon,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  GitBranch,
+  Github,
+  HardDrive,
+  RefreshCw,
+  Check,
+  Copy,
+  Volume2,
+  VolumeX,
+  Headphones,
+  Play,
+  Pause,
+  AlertTriangle,
+  ArrowUpRight,
+  Code
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { 
@@ -52,6 +66,15 @@ import {
   FaqItem,
   Department 
 } from '../types';
+import { 
+  testGitHubRepo, 
+  syncDataToGitHub, 
+  downloadTsFile, 
+  generateTeamDataTsCode,
+  RepoTestResult,
+  SyncResult 
+} from '../utils/githubSync';
+import { audioEngine } from '../utils/audioSynthesizer';
 
 interface AdminViewProps {
   onNavigate: (tab: NavTab) => void;
@@ -103,8 +126,34 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
 
   // Admin Active Tab
   const [activeAdminTab, setActiveAdminTab] = useState<
-    'info' | 'songs' | 'albums' | 'collaborations' | 'members' | 'navigation_socials' | 'about_faq' | 'announcements' | 'recruitment' | 'security'
+    'info' | 'songs' | 'albums' | 'collaborations' | 'members' | 'navigation_socials' | 'about_faq' | 'announcements' | 'recruitment' | 'github_sync' | 'security'
   >('info');
+
+  // Audio testing state in admin
+  const [previewPlayingSongId, setPreviewPlayingSongId] = useState<string | null>(null);
+
+  // GitHub Sync state
+  const [gitToken, setGitToken] = useState(() => localStorage.getItem('xiangyi_github_token') || '');
+  const [gitRepo, setGitRepo] = useState(() => localStorage.getItem('xiangyi_github_repo') || 'Light-Flash-ing/xiangyi-music-website');
+  const [gitBranch, setGitBranch] = useState(() => localStorage.getItem('xiangyi_github_branch') || 'main');
+  const [gitFilePath, setGitFilePath] = useState(() => localStorage.getItem('xiangyi_github_filepath') || 'src/data/teamData.ts');
+  const [gitCommitMsg, setGitCommitMsg] = useState('');
+  const [showGitToken, setShowGitToken] = useState(false);
+  const [isTestingGit, setIsTestingGit] = useState(false);
+  const [gitTestResult, setGitTestResult] = useState<RepoTestResult | null>(null);
+  const [isSyncingGit, setIsSyncingGit] = useState(false);
+  const [gitSyncStep, setGitSyncStep] = useState('');
+  const [gitSyncResult, setGitSyncResult] = useState<SyncResult | null>(null);
+  const [copiedTsCode, setCopiedTsCode] = useState(false);
+  const [showTokenHelp, setShowTokenHelp] = useState(false);
+  const [showTsPreview, setShowTsPreview] = useState(false);
+
+  // Keep AudioEngine state synced in Admin
+  useEffect(() => {
+    audioEngine.setCallback((isPlaying, songId) => {
+      setPreviewPlayingSongId(isPlaying ? songId : null);
+    });
+  }, []);
 
   // Tab scroll navigation state & refs
   const tabsContainerRef = useRef<HTMLDivElement>(null);
@@ -302,6 +351,130 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
     }
   };
 
+  // Toggle song audio preview inside Admin
+  const handleToggleSongPreviewInAdmin = (song: Song) => {
+    if (previewPlayingSongId === song.id) {
+      audioEngine.stop();
+      setPreviewPlayingSongId(null);
+    } else {
+      setPreviewPlayingSongId(song.id);
+      audioEngine.playSongPreview(song.id, song.genre, song.audioUrl);
+      showToast(`正在试听《${song.title}》...`);
+    }
+  };
+
+  // Save Git Config to localStorage
+  const saveGitConfig = (tokenVal = gitToken, repoVal = gitRepo, branchVal = gitBranch, pathVal = gitFilePath) => {
+    localStorage.setItem('xiangyi_github_token', tokenVal.trim());
+    localStorage.setItem('xiangyi_github_repo', repoVal.trim());
+    localStorage.setItem('xiangyi_github_branch', branchVal.trim());
+    localStorage.setItem('xiangyi_github_filepath', pathVal.trim());
+  };
+
+  // Test Git Repo connection
+  const handleTestGitConnection = async () => {
+    saveGitConfig();
+    setIsTestingGit(true);
+    setGitTestResult(null);
+    try {
+      const result = await testGitHubRepo(gitToken, gitRepo);
+      setGitTestResult(result);
+      if (result.success) {
+        showToast('GitHub 仓库连接测试通过！');
+      } else {
+        showToast(result.message);
+      }
+    } catch (e: any) {
+      setGitTestResult({ success: false, message: e.message || '网络连接异常' });
+    } finally {
+      setIsTestingGit(false);
+    }
+  };
+
+  // Push latest data directly to GitHub
+  const handleSyncToGitHub = async () => {
+    if (!gitToken.trim()) {
+      showToast('请先填写 GitHub Personal Access Token (PAT)');
+      setActiveAdminTab('github_sync');
+      return;
+    }
+    if (!gitRepo.trim()) {
+      showToast('请填写 GitHub 仓库名 (如 owner/repo)');
+      setActiveAdminTab('github_sync');
+      return;
+    }
+
+    saveGitConfig();
+    setIsSyncingGit(true);
+    setGitSyncResult(null);
+    setGitSyncStep('正在准备同步数据...');
+
+    try {
+      const result = await syncDataToGitHub(
+        {
+          token: gitToken,
+          repo: gitRepo,
+          branch: gitBranch || 'main',
+          filePath: gitFilePath || 'src/data/teamData.ts',
+          commitMessage: gitCommitMsg
+        },
+        {
+          teamInfo,
+          songs,
+          albums,
+          collaborations,
+          members,
+          announcements,
+          recruitmentPositions
+        },
+        (step) => setGitSyncStep(step)
+      );
+
+      setGitSyncResult(result);
+      showToast('🎉 同步成功！最新前端修改已提交至 GitHub！');
+    } catch (err: any) {
+      setGitSyncResult({
+        success: false,
+        message: err.message || '同步失败，请检查网络或 Token 权限'
+      });
+      showToast(`同步失败: ${err.message || '未知错误'}`);
+    } finally {
+      setIsSyncingGit(false);
+    }
+  };
+
+  // Download teamData.ts
+  const handleDownloadTsFile = () => {
+    const code = generateTeamDataTsCode({
+      teamInfo,
+      songs,
+      albums,
+      collaborations,
+      members,
+      announcements,
+      recruitmentPositions
+    });
+    downloadTsFile('teamData.ts', code);
+    showToast('已下载最新的 teamData.ts 源码文件！');
+  };
+
+  // Copy TypeScript code
+  const handleCopyTsCode = () => {
+    const code = generateTeamDataTsCode({
+      teamInfo,
+      songs,
+      albums,
+      collaborations,
+      members,
+      announcements,
+      recruitmentPositions
+    });
+    navigator.clipboard.writeText(code);
+    setCopiedTsCode(true);
+    showToast('已复制完整 TypeScript 源码到剪贴板！');
+    setTimeout(() => setCopiedTsCode(false), 3000);
+  };
+
   // -------------------------------------------------------------
   // 1. UN-AUTHENTICATED LOGIN SCREEN
   // -------------------------------------------------------------
@@ -430,6 +603,19 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
         {/* Action Buttons */}
         <div className="flex items-center flex-wrap gap-2">
           <button
+            onClick={() => setActiveAdminTab('github_sync')}
+            className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all ${
+              activeAdminTab === 'github_sync'
+                ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md shadow-cyan-500/20'
+                : 'bg-slate-800 hover:bg-slate-700 text-cyan-300 border-cyan-500/40 hover:border-cyan-400'
+            }`}
+            title="向 GitHub 同步前端修改数据，防止更新网站时修改丢失"
+          >
+            <GitBranch className="w-3.5 h-3.5" />
+            <span>GitHub 同步</span>
+          </button>
+
+          <button
             onClick={handleExport}
             className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-all"
             title="导出整站数据配置为 JSON 备份文件"
@@ -506,6 +692,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
             { id: 'about_faq', label: '历程与问答FAQ', icon: HelpCircle, count: ((teamInfo.milestones || []).length + (teamInfo.faqs || []).length) },
             { id: 'announcements', label: '公告管理', icon: Megaphone, count: announcements.length },
             { id: 'recruitment', label: '招募岗位', icon: Sparkles, count: recruitmentPositions.length },
+            { id: 'github_sync', label: 'GitHub 代码同步', icon: GitBranch, count: null },
             { id: 'security', label: '安全与密码', icon: KeyRound, count: null },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -1083,56 +1270,99 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {songs.map((song) => (
-              <div
-                key={song.id}
-                className="p-4 rounded-2xl bg-slate-950 border border-slate-800 hover:border-cyan-500/40 flex gap-3.5 items-start justify-between"
-              >
-                <div className="flex gap-3 min-w-0">
-                  <img
-                    src={song.coverUrl}
-                    alt={song.title}
-                    referrerPolicy="no-referrer"
-                    className="w-16 h-16 rounded-xl object-cover border border-slate-700 shrink-0"
-                  />
-                  <div className="min-w-0 space-y-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <h4 className="font-bold text-sm text-white truncate">{song.title}</h4>
-                      {song.isFeatured && (
-                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold">精选</span>
+            {songs.map((song) => {
+              const isSongPlaying = previewPlayingSongId === song.id;
+              const hasAudioUrl = Boolean(song.audioUrl && song.audioUrl.trim().length > 0);
+
+              return (
+                <div
+                  key={song.id}
+                  className={`p-4 rounded-2xl bg-slate-950 border transition-all flex gap-3.5 items-start justify-between ${
+                    isSongPlaying ? 'border-cyan-500/80 shadow-lg shadow-cyan-500/10' : 'border-slate-800 hover:border-cyan-500/40'
+                  }`}
+                >
+                  <div className="flex gap-3 min-w-0">
+                    <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-700 shrink-0 bg-slate-900">
+                      <img
+                        src={song.coverUrl}
+                        alt={song.title}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover"
+                      />
+                      {isSongPlaying && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <span className="flex gap-0.5 items-end h-3.5">
+                            <span className="w-0.5 h-2 bg-cyan-400 animate-ping" />
+                            <span className="w-0.5 h-3.5 bg-cyan-400 animate-pulse" />
+                            <span className="w-0.5 h-2 bg-cyan-400" />
+                          </span>
+                        </div>
                       )}
                     </div>
-                    <p className="text-xs text-cyan-400 font-mono">BV: {song.bilibiliBvid}</p>
-                    <p className="text-[11px] text-slate-400">歌手: {song.singer} · 曲风: {song.genre}</p>
+
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h4 className="font-bold text-sm text-white truncate">{song.title}</h4>
+                        {song.isFeatured && (
+                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold">精选</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-cyan-400 font-mono">BV: {song.bilibiliBvid}</p>
+                      <div className="flex items-center gap-1.5 flex-wrap text-[11px] text-slate-400">
+                        <span>歌手: {song.singer} · {song.genre}</span>
+                        {hasAudioUrl ? (
+                          <span className="inline-flex items-center gap-0.5 text-[9px] px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                            <Headphones className="w-2.5 h-2.5" /> 原声音频
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-0.5 text-[9px] px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                            <Music className="w-2.5 h-2.5" /> 旋律合成
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => handleToggleSongPreviewInAdmin(song)}
+                      className={`p-2 rounded-lg border text-xs font-semibold flex items-center gap-1 transition-all ${
+                        isSongPlaying
+                          ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md shadow-cyan-500/20 animate-pulse'
+                          : 'bg-slate-800 hover:bg-slate-700 text-cyan-300 border-slate-700'
+                      }`}
+                      title={isSongPlaying ? '暂停试听' : '在线试听'}
+                    >
+                      {isSongPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                      <span className="hidden sm:inline">{isSongPlaying ? '暂停' : '试听'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setEditingSong({ ...song });
+                        setIsSongModalOpen(true);
+                      }}
+                      className="p-2 rounded-lg bg-slate-800 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-300 border border-slate-700"
+                      title="编辑此曲目"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`确定要删除单曲《${song.title}》吗？`)) {
+                          deleteSong(song.id);
+                          showToast(`已删除单曲《${song.title}》`);
+                        }
+                      }}
+                      className="p-2 rounded-lg bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 border border-slate-700"
+                      title="删除单曲"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    onClick={() => {
-                      setEditingSong({ ...song });
-                      setIsSongModalOpen(true);
-                    }}
-                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-300 border border-slate-700"
-                    title="编辑此曲目"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (window.confirm(`确定要删除单曲《${song.title}》吗？`)) {
-                        deleteSong(song.id);
-                        showToast(`已删除单曲《${song.title}》`);
-                      }
-                    }}
-                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 border border-slate-700"
-                    title="删除单曲"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -2163,7 +2393,394 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
       )}
 
       {/* ========================================================= */}
-      {/* 7. 安全与密码设置 */}
+      {/* 10. GitHub 代码同步与数据持久化 */}
+      {/* ========================================================= */}
+      {activeAdminTab === 'github_sync' && (
+        <div className="space-y-6">
+          {/* Hero Banner */}
+          <div className="p-6 rounded-3xl bg-slate-900 border border-cyan-500/40 relative overflow-hidden shadow-2xl">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-cyan-500/10 via-purple-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-purple-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-300 shadow-lg shadow-cyan-500/10">
+                  <GitBranch className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <span>GitHub 前端数据同步与持久化</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-mono">
+                      v2.5 Sync Engine
+                    </span>
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    将后台管理界面的所有修改一键推送至 GitHub 源码（<code className="text-cyan-300 font-mono">src/data/teamData.ts</code>），杜绝部署更新导致数据丢失
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handleDownloadTsFile}
+                  className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                  title="下载生成的 TypeScript 数据源码文件"
+                >
+                  <Download className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>下载 teamData.ts</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCopyTsCode}
+                  className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                  title="复制生成的 TypeScript 代码"
+                >
+                  {copiedTsCode ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5 text-purple-400" />}
+                  <span>{copiedTsCode ? '已复制源码' : '复制代码'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Feature Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-5">
+              <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80 flex gap-3 items-start">
+                <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shrink-0">
+                  <HardDrive className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white">源码级持久化保存</h4>
+                  <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                    不仅存储在本地浏览器缓存中，更直接更新 GitHub 仓库代码，任何成员重新拉取或云端构建均能生效。
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80 flex gap-3 items-start">
+                <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 shrink-0">
+                  <RefreshCw className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white">自动化 CI/CD 触发</h4>
+                  <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                    同步成功后 GitHub Actions 或 Vercel/Pages 将自动检测到 Commit 并开始构建发布最新版本。
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80 flex gap-3 items-start">
+                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white">安全与离线双保障</h4>
+                  <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                    Token 仅加密缓存在您本地浏览器；同时支持一键下载 <code className="text-cyan-300 font-mono">.ts</code> 文件进行手动替换。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sync Configuration Form */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-7 p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Github className="w-4 h-4 text-cyan-400" />
+                  <span>GitHub 仓库授权与参数设置</span>
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowTokenHelp(!showTokenHelp)}
+                  className="text-xs text-cyan-400 hover:text-cyan-300 underline underline-offset-2 flex items-center gap-1 cursor-pointer"
+                >
+                  <HelpCircle className="w-3.5 h-3.5" />
+                  <span>如何获取 GitHub Token?</span>
+                </button>
+              </div>
+
+              {/* Token Help Collapsible */}
+              {showTokenHelp && (
+                <div className="p-4 rounded-2xl bg-cyan-950/40 border border-cyan-500/30 text-xs text-slate-300 space-y-2 animate-fade-in">
+                  <div className="font-bold text-cyan-300 flex items-center justify-between">
+                    <span>💡 如何创建 GitHub Personal Access Token (PAT):</span>
+                    <a
+                      href="https://github.com/settings/tokens"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-cyan-400 hover:underline"
+                    >
+                      前往 GitHub Token 页面 <ArrowUpRight className="w-3 h-3" />
+                    </a>
+                  </div>
+                  <ol className="list-decimal list-inside space-y-1 text-[11px] text-slate-300 leading-relaxed">
+                    <li>登录 GitHub，点击右上角头像 → Settings → Developer Settings → <strong>Personal access tokens</strong> → <strong>Tokens (classic)</strong>。</li>
+                    <li>点击 <strong>Generate new token (classic)</strong>。</li>
+                    <li>Note 填写例如 <code className="text-cyan-300">xiangyi-web-admin</code>，勾选 <strong>repo</strong> 权限（完整仓库读写权限）。</li>
+                    <li>点击底部 <strong>Generate token</strong>，复制生成的以 <code className="text-cyan-300">ghp_</code> 开头的 Token 粘贴至下方输入框。</li>
+                  </ol>
+                </div>
+              )}
+
+              <div className="space-y-4 text-xs">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="font-semibold text-slate-200">
+                      GitHub Personal Access Token (PAT) <span className="text-red-400">*</span>
+                    </label>
+                    <span className="text-[10px] text-slate-500">保存在本地 LocalStorage</span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showGitToken ? 'text' : 'password'}
+                      value={gitToken}
+                      onChange={(e) => {
+                        setGitToken(e.target.value);
+                        saveGitConfig(e.target.value, gitRepo, gitBranch, gitFilePath);
+                      }}
+                      placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                      className="w-full pl-3 pr-10 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-cyan-300 font-mono focus:border-cyan-500 focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowGitToken(!showGitToken)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                    >
+                      {showGitToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-slate-200 mb-1.5">
+                      GitHub 仓库 (Owner/Repo) <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={gitRepo}
+                      onChange={(e) => {
+                        setGitRepo(e.target.value);
+                        saveGitConfig(gitToken, e.target.value, gitBranch, gitFilePath);
+                      }}
+                      placeholder="例如 Light-Flash-ing/xiangyi-music-website"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 font-mono focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-200 mb-1.5">
+                      目标分支 (Branch) <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={gitBranch}
+                      onChange={(e) => {
+                        setGitBranch(e.target.value);
+                        saveGitConfig(gitToken, gitRepo, e.target.value, gitFilePath);
+                      }}
+                      placeholder="main"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 font-mono focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-200 mb-1.5">
+                    数据文件路径 (Relative Path)
+                  </label>
+                  <input
+                    type="text"
+                    value={gitFilePath}
+                    onChange={(e) => {
+                      setGitFilePath(e.target.value);
+                      saveGitConfig(gitToken, gitRepo, gitBranch, e.target.value);
+                    }}
+                    placeholder="src/data/teamData.ts"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 font-mono focus:border-cyan-500 focus:outline-none"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    系统将把全站最新数据打包并覆盖该文件，默认即为 <code className="text-slate-400 font-mono">src/data/teamData.ts</code>
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-200 mb-1.5">
+                    自定义 Commit 提交说明 (可选)
+                  </label>
+                  <input
+                    type="text"
+                    value={gitCommitMsg}
+                    onChange={(e) => setGitCommitMsg(e.target.value)}
+                    placeholder={`docs(data): update site contents via admin console (${new Date().toLocaleDateString()})`}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:border-cyan-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="pt-3 border-t border-slate-800 flex items-center justify-between flex-wrap gap-3">
+                  <button
+                    type="button"
+                    disabled={isTestingGit || !gitToken.trim() || !gitRepo.trim()}
+                    onClick={handleTestGitConnection}
+                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 disabled:opacity-50 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all"
+                  >
+                    {isTestingGit ? <RefreshCw className="w-3.5 h-3.5 animate-spin text-cyan-400" /> : <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />}
+                    <span>{isTestingGit ? '正在连接测试...' : '测试仓库连接'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isSyncingGit || !gitToken.trim() || !gitRepo.trim()}
+                    onClick={handleSyncToGitHub}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs flex items-center gap-2 cursor-pointer shadow-lg shadow-cyan-500/25 transition-all disabled:opacity-50"
+                  >
+                    {isSyncingGit ? <RefreshCw className="w-4 h-4 animate-spin" /> : <GitBranch className="w-4 h-4" />}
+                    <span>{isSyncingGit ? (gitSyncStep || '正在同步中...') : '🚀 立即同步至 GitHub'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Status & Sync Output Logs */}
+            <div className="lg:col-span-5 space-y-4">
+              {/* Connection Status Card */}
+              {gitTestResult && (
+                <div className={`p-4 rounded-2xl border text-xs animate-fade-in ${
+                  gitTestResult.success 
+                    ? 'bg-green-950/40 border-green-500/40 text-green-200' 
+                    : 'bg-red-950/40 border-red-500/40 text-red-200'
+                }`}>
+                  <div className="flex items-center gap-2 font-bold mb-1">
+                    {gitTestResult.success ? <CheckCircle2 className="w-4 h-4 text-green-400" /> : <AlertCircle className="w-4 h-4 text-red-400" />}
+                    <span>{gitTestResult.success ? '仓库连接成功' : '连接失败'}</span>
+                  </div>
+                  <p className="text-[11px] opacity-90 leading-relaxed">{gitTestResult.message}</p>
+                  {gitTestResult.repoFullName && (
+                    <div className="mt-2 pt-2 border-t border-current/20 text-[10px] space-y-0.5 opacity-80">
+                      <div>目标仓库：{gitTestResult.repoFullName}</div>
+                      <div>默认分支：{gitTestResult.defaultBranch}</div>
+                      <div>推送权限：{gitTestResult.permissions?.push ? '✅ 具备写入权限' : '❌ 无写入权限'}</div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Sync Result Card */}
+              {gitSyncResult && (
+                <div className={`p-4 rounded-2xl border text-xs animate-fade-in ${
+                  gitSyncResult.success 
+                    ? 'bg-cyan-950/50 border-cyan-500/50 text-cyan-100 shadow-xl shadow-cyan-500/10' 
+                    : 'bg-red-950/50 border-red-500/50 text-red-100'
+                }`}>
+                  <div className="flex items-center gap-2 font-bold mb-1">
+                    {gitSyncResult.success ? <CheckCircle2 className="w-4 h-4 text-cyan-400" /> : <AlertCircle className="w-4 h-4 text-red-400" />}
+                    <span>{gitSyncResult.success ? '🎉 数据已成功推送至 GitHub！' : '同步失败'}</span>
+                  </div>
+                  <p className="text-[11px] opacity-90 leading-relaxed">{gitSyncResult.message}</p>
+                  
+                  {gitSyncResult.commitUrl && (
+                    <div className="mt-3 pt-2 border-t border-cyan-500/30 flex items-center justify-between">
+                      <span className="text-[10px] text-cyan-300 font-mono">
+                        Commit: {gitSyncResult.commitSha?.slice(0, 7)}
+                      </span>
+                      <a
+                        href={gitSyncResult.commitUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 font-semibold underline underline-offset-2"
+                      >
+                        在 GitHub 查看提交 <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Data Summary Card */}
+              <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 text-xs">
+                <h4 className="font-bold text-white flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-cyan-400" />
+                  <span>当前同步数据包快照</span>
+                </h4>
+                
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-850 flex items-center justify-between">
+                    <span className="text-slate-400">单曲作品</span>
+                    <span className="font-bold text-cyan-300 font-mono">{songs.length} 首</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-855 flex items-center justify-between">
+                    <span className="text-slate-400">专辑唱片</span>
+                    <span className="font-bold text-cyan-300 font-mono">{albums.length} 张</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-850 flex items-center justify-between">
+                    <span className="text-slate-400">团队成员</span>
+                    <span className="font-bold text-cyan-300 font-mono">{members.length} 位</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-850 flex items-center justify-between">
+                    <span className="text-slate-400">合作项目</span>
+                    <span className="font-bold text-cyan-300 font-mono">{collaborations.length} 项</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-850 flex items-center justify-between">
+                    <span className="text-slate-400">公告通知</span>
+                    <span className="font-bold text-cyan-300 font-mono">{announcements.length} 条</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-850 flex items-center justify-between">
+                    <span className="text-slate-400">招募岗位</span>
+                    <span className="font-bold text-cyan-300 font-mono">{recruitmentPositions.length} 个</span>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => setShowTsPreview(!showTsPreview)}
+                    className="text-[11px] text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-semibold cursor-pointer"
+                  >
+                    <Code className="w-3.5 h-3.5" />
+                    <span>{showTsPreview ? '隐藏源码预览' : '预览生成的 TypeScript 源码'}</span>
+                  </button>
+
+                  <span className="text-[10px] text-slate-500">
+                    最后更新: {new Date().toLocaleTimeString()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Code Preview Drawer / Box */}
+              {showTsPreview && (
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-[10px] font-mono space-y-2 animate-fade-in">
+                  <div className="flex items-center justify-between text-slate-400 border-b border-slate-850 pb-1.5">
+                    <span>teamData.ts (部分预览)</span>
+                    <button
+                      type="button"
+                      onClick={handleCopyTsCode}
+                      className="text-cyan-400 hover:underline flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <Copy className="w-2.5 h-2.5" /> 复制全部
+                    </button>
+                  </div>
+                  <pre className="text-slate-300 max-h-48 overflow-y-auto whitespace-pre-wrap leading-relaxed">
+                    {generateTeamDataTsCode({
+                      teamInfo,
+                      songs,
+                      albums,
+                      collaborations,
+                      members,
+                      announcements,
+                      recruitmentPositions
+                    }).slice(0, 1500)}
+                    ...
+                  </pre>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* 11. 安全与密码设置 */}
       {/* ========================================================= */}
       {activeAdminTab === 'security' && (
         <div className="max-w-xl p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-6">
@@ -2381,6 +2998,133 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
                   onChange={(e) => setEditingSong({ ...editingSong, lyrics: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 font-mono text-[11px]"
                 />
+              </div>
+
+              {/* 试听音频源配置与实时调试 (Audio Preview Settings & Live Testing) */}
+              <div className="sm:col-span-2 p-4 rounded-2xl bg-slate-950 border border-cyan-500/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Headphones className="w-4 h-4 text-cyan-400" />
+                    <span className="font-bold text-white text-xs">试听音频源与调试 (Audio Preview)</span>
+                  </div>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 ${
+                    editingSong.audioUrl 
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' 
+                      : 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
+                  }`}>
+                    {editingSong.audioUrl ? '🎵 已配置原声试听' : '🎹 默认网页旋律合成器'}
+                  </span>
+                </div>
+
+                {/* 音频文件上传与直链输入 */}
+                <div className="space-y-2">
+                  <label className="block text-[11px] text-slate-300 font-semibold">
+                    1. 自动上传本地音频文件 (MP3 / WAV / M4A / AAC / FLAC / OGG)
+                  </label>
+                  
+                  <div className="relative border-2 border-dashed border-slate-700 hover:border-cyan-500/60 rounded-xl p-3 bg-slate-900/60 hover:bg-slate-900 transition-all flex flex-col sm:flex-row items-center gap-3 cursor-pointer group">
+                    <input
+                      type="file"
+                      accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (ev) => {
+                            const dataUrl = ev.target?.result as string;
+                            if (dataUrl) {
+                              setEditingSong({
+                                ...editingSong,
+                                audioUrl: dataUrl,
+                                audioMode: 'custom'
+                              });
+                              showToast(`音频文件【${file.name}】读取成功！`);
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                        e.target.value = '';
+                      }}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    />
+                    <Upload className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform shrink-0" />
+                    <div className="text-center sm:text-left min-w-0 flex-1">
+                      <div className="text-xs text-slate-200">
+                        <span className="text-cyan-300 font-semibold underline underline-offset-2">点击选择本地音频文件</span>
+                        <span className="text-slate-400"> 或拖拽音频至此处</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-0.5">
+                        自动转换为本地试听直链，保存后前台播放条与试听按钮即刻可用
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 2. 或直接填入网络音频 URL */}
+                  <div className="space-y-1 pt-1">
+                    <label className="block text-[11px] text-slate-300 font-semibold">
+                      2. 或直接填入在线音频直链 URL (CDN / OSS / 网盘直链)
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={editingSong.audioUrl || ''}
+                        onChange={(e) => setEditingSong({ ...editingSong, audioUrl: e.target.value, audioMode: 'custom' })}
+                        placeholder="https://example.com/audio/song.mp3 或 data:audio/..."
+                        className="flex-1 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] text-cyan-300 font-mono"
+                      />
+                      {editingSong.audioUrl && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            audioEngine.stop();
+                            setEditingSong({ ...editingSong, audioUrl: '', audioMode: 'synth' });
+                            showToast('已清除音频源，将自动使用自适应旋律合成器');
+                          }}
+                          className="px-2.5 py-1 rounded-xl bg-slate-850 hover:bg-red-950 text-red-400 border border-slate-700 text-[10px] font-semibold flex items-center gap-1 cursor-pointer shrink-0"
+                          title="清除自定义音频，恢复为网页自适应旋律合成模式"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>清除</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 在线即时试听调试控制台 */}
+                <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (previewPlayingSongId === editingSong.id) {
+                          audioEngine.stop();
+                          setPreviewPlayingSongId(null);
+                        } else {
+                          setPreviewPlayingSongId(editingSong.id);
+                          audioEngine.playSongPreview(editingSong.id, editingSong.genre, editingSong.audioUrl);
+                          showToast(`正在调试播放《${editingSong.title}》`);
+                        }
+                      }}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all ${
+                        previewPlayingSongId === editingSong.id
+                          ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20 animate-pulse'
+                          : 'bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 border border-cyan-500/40'
+                      }`}
+                    >
+                      {previewPlayingSongId === editingSong.id ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                      <span>{previewPlayingSongId === editingSong.id ? '暂停试听测试' : '▶ 在线试听测试'}</span>
+                    </button>
+
+                    <span className="text-[10px] text-slate-400">
+                      {editingSong.audioUrl ? '（当前测试：自定义音频流）' : `（当前测试：${editingSong.genre || '国风'}自适应旋律合成器）`}
+                    </span>
+                  </div>
+
+                  <span className="text-[10px] text-slate-500">
+                    支持即时上传与实时调音
+                  </span>
+                </div>
               </div>
 
               <div className="sm:col-span-2 flex items-center gap-2">
