@@ -1,6 +1,6 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-08-26T20:09:14.728Z (2026/8/27 04:09:14)
+ * 自动同步生成时间: 2026-08-26T20:12:09.502Z (2026/8/27 04:12:09)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
@@ -585,7 +585,7 @@ export const MEMBERS_DATA: Member[] = [
     "avatar": "https://i1.hdslb.com/bfs/face/bbfffcfb6a26a1547f8dc22f17c3d494dc1f1d46.webp",
     "role": "主力作词 / 视频制作",
     "department": "lyrics",
-    "badge": "词作/视频",
+    "badge": "副社长/社团外交官/词作",
     "bio": "相依团队主力词作与视频创作者，文字细腻富有哲学意境，擅长刻画深层情感。",
     "representativeWorks": [
       "《瞬时爱恋》作词",
