@@ -1,6 +1,6 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-08-26T20:16:26.472Z (2026/8/27 04:16:26)
+ * 自动同步生成时间: 2026-08-26T20:17:32.265Z (2026/8/27 04:17:32)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
@@ -699,7 +699,7 @@ export const MEMBERS_DATA: Member[] = [
     "name": "腐叶化蝶",
     "avatar": "https://i0.hdslb.com/bfs/face/677185a1973a82ac4d7fe7b847a58923e7cbeb6e.jpg",
     "role": "混音师 / 调教师",
-    "department": "music",
+    "department": "tuning",
     "badge": "混音工程师",
     "bio": "擅长声场空间构架与频段雕琢，为《瞬时爱恋》打造纯净通透的声音质感。",
     "representativeWorks": [
