@@ -1,6 +1,6 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-08-26T20:14:27.772Z (2026/8/27 04:14:27)
+ * 自动同步生成时间: 2026-08-26T20:16:26.472Z (2026/8/27 04:16:26)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
@@ -550,9 +550,9 @@ export const MEMBERS_DATA: Member[] = [
     "id": "mem-2",
     "name": "light闪电ing",
     "avatar": "https://i0.hdslb.com/bfs/face/85c4b79d5cf79b658cadd029ddd76dd42773ef2a.jpg",
-    "role": "联合发起人 / 策划 / 视频制作",
+    "role": "相依创始人 / 策划 / 视频制作",
     "department": "admin",
-    "badge": "核心主创",
+    "badge": "相依创始人",
     "bio": "中V PV师创作者，相依团队联合发起人与主力策划，统筹视频制作与企划宣发。",
     "representativeWorks": [
       "《依你共鸣》视频/策划",
@@ -584,7 +584,7 @@ export const MEMBERS_DATA: Member[] = [
     "name": "仲瑾特雷森帝吓室",
     "avatar": "https://i1.hdslb.com/bfs/face/bbfffcfb6a26a1547f8dc22f17c3d494dc1f1d46.webp",
     "role": "主力作词 / 视频制作",
-    "department": "lyrics",
+    "department": "admin",
     "badge": "副社长/社团外交官/词作",
     "bio": "相依团队主力词作与视频创作者，文字细腻富有哲学意境，擅长刻画深层情感。",
     "representativeWorks": [
