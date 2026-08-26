@@ -1,0 +1,6 @@
+{
+  "name": "相依团队 Xiangyi Team 官网",
+  "description": "相依同人音乐创作团队官方网站，提供原创单曲、企划专辑展示、B站视频内嵌播放、成员介绍与曲绘/PV招募中心。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
