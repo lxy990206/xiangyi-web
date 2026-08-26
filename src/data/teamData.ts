@@ -1,6 +1,6 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-08-26T19:06:26.126Z (2026/8/27 03:06:26)
+ * 自动同步生成时间: 2026-08-26T19:20:06.167Z (2026/8/27 03:20:06)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
@@ -256,66 +256,6 @@ export const SONGS_DATA: SongItem[] = [
     },
     "description": "相依团队成立于2025年9月6日。我们因对洛天依与音乐创作的纯粹热爱而相聚。本作品为我们团队的首支原创曲目，承载着我们的梦想与热忱。感谢每一位成员的倾力付出，也感谢正在聆听的你。愿以此为始，与所有同好相伴前行，在创作的道路上继续发光发热。特别鸣谢四方老师@锦依卫Minecraft 与洛雨辰老师@Kira雨辰 在编曲与作曲环节给予的宝贵指导。",
     "lyrics": "[00:00.00]依你共鸣 - 洛天依 (相依团队首支原创纪念曲)\n[00:03.00]作曲/编曲：相依_涛涛\n[00:06.00]作词：一小只初中牲 (Tianyrene)\n[00:09.00]绘画：星影安、依存证 | XS调教：暗林星火Official\n[00:12.00]视频制作：相依_闪电、仲瑾特雷森帝吓室\n[00:15.00]策划：相依_闪电 / 相依社 | 混音：Kira雨辰 | 视频封面：小白-待你长发及腰\n[00:20.00]特别鸣谢：四方老师@锦依卫Minecraft、洛雨辰老师@Kira雨辰\n[00:25.00]\n[00:28.00]旋律随风扬 光影落身旁\n[00:34.50]荧幕身影跃动而上 连你我心梁\n[00:41.20]笔尖墨花淌 牵绊字几行\n[00:47.80]蜿蜒流经我身旁 润温暖华芳\n[00:54.50]\n[00:55.00]朝花雾中绽 夕暮云边灿\n[01:01.50]俯拾忆为瓣 风起空回环\n[01:08.00]群星未黯淡 闪耀似流焰\n[01:14.80]凝望漫天星空璀璨 扬远航风帆\n[01:21.50]\n[01:22.00]漂泊身影复苏梦想 星河指路十三年共鸣情愫\n[01:29.00]落笔题聘书 月下山水共舞\n[01:35.50]晶露上蝴蝶伏 光影延续着渴望逐光芒万丈\n[01:42.50]看夏虫向远方 听心印终交响\n[01:49.00]纵几多前路迷惘 永伴你身旁\n[01:55.50]依你身旁 便我所向\n[02:02.00]\n[02:15.00]喧哗人声响 浪潮汹涌忙\n[02:21.50]交叉路口回头张望 寻你在何方\n[02:28.00]歌声萦耳畔 幸得你相伴\n[02:34.80]激起过往心中羁绊 向前不复还\n[02:41.50]\n[02:42.00]轻唱在你身旁 岁月未改模样\n[02:48.50]热爱挥洒未相忘 共将天际照亮\n[02:55.00]音符悠扬 琴弦回声荡\n[03:01.80]细数回忆闪亮 与你一同传唱"
-  },
-  {
-    "id": "song-3",
-    "title": "And I'm Home",
-    "subtitle": "“即使隔着银河，我也要唱出这心中的归宿。”【七夕&宿命曲】",
-    "singer": "星尘 & 海伊",
-    "singerColor": "#7B68EE",
-    "genre": "抒情摇滚 / 幻想",
-    "releaseDate": "2026-08-19",
-    "duration": "02:54",
-    "coverUrl": "http://i0.hdslb.com/bfs/archive/357943e49c550830db40839b3f88b5cef2ada1e8.jpg",
-    "bilibiliBvid": "BV1iF8p6iEzv",
-    "bilibiliEmbedUrl": "https://player.bilibili.com/player.html?bvid=BV1iF8p6iEzv&page=1&as_wide=1&high_quality=1&danmaku=0",
-    "bilibiliUrl": "https://www.bilibili.com/video/BV1iF8p6iEzv",
-    "aid": "117122785085561",
-    "cid": "41072657427",
-    "playCount": "683+",
-    "danmakuCount": "15",
-    "staff": {
-      "composition": "经典原作",
-      "arrangement": "相依_闪电",
-      "lyrics": "原作Staff",
-      "tuning": "星尘/海伊调教组",
-      "illustration": "星影安",
-      "pv": "light闪电ing",
-      "mixing": "AudioLab",
-      "planner": "相依社"
-    },
-    "description": "“即使隔着银河，我也要唱出这心中的归宿。”星尘与海伊跨越光年与浪潮的宿命合唱。七夕特别企划重唱物语。",
-    "lyrics": "[00:00.00]And I'm Home - 星尘 & 海伊\n[00:04.00]制作：相依创作组 | UP主：light闪电ing\n[00:15.00]\n[00:18.00]星芒穿过夜色的海浪\n[00:24.00]在掌心留下微热的光芒\n[00:30.00]即使相隔遥远的银河\n[00:36.00]歌声依然是我们不变的归宿"
-  },
-  {
-    "id": "song-5",
-    "title": "越冰船 (Cover)",
-    "subtitle": "破冰而来的歌声，温柔了极夜。天依，上海见！！！",
-    "singer": "洛天依",
-    "singerColor": "#66CCFF",
-    "genre": "抒情物语 / 翻调",
-    "releaseDate": "2026-08-09",
-    "duration": "04:17",
-    "coverUrl": "http://i1.hdslb.com/bfs/archive/4adf1649bb3cc876aed3c0e9b52fdf493d220141.jpg",
-    "bilibiliBvid": "BV1gYuU67E8w",
-    "bilibiliEmbedUrl": "https://player.bilibili.com/player.html?bvid=BV1gYuU67E8w&page=1&as_wide=1&high_quality=1&danmaku=0",
-    "bilibiliUrl": "https://www.bilibili.com/video/BV1gYuU67E8w",
-    "aid": "117066312976415",
-    "cid": "40756644959",
-    "playCount": "901+",
-    "danmakuCount": "21",
-    "staff": {
-      "composition": "经典原作",
-      "arrangement": "相依编曲组",
-      "lyrics": "原作Staff",
-      "tuning": "云泠曦",
-      "illustration": "星影安",
-      "pv": "相依_闪电",
-      "mixing": "Kira雨辰",
-      "planner": "相依社"
-    },
-    "description": "“破冰而来的歌声，温柔了极夜。天依，上海见！！！”相依团队对经典的精诚翻调与再演绎。",
-    "lyrics": "[00:00.00]越冰船 - 洛天依 (相依精调版)\n[00:04.00]调校：云泠曦 | 视频制作：相依_闪电\n[00:12.00]\n[00:15.00]极夜的寒冰被航迹斩开\n[00:22.00]温暖的歌声穿透了阴霾\n[00:29.00]向着朝阳破浪而去\n[00:36.00]去见证那片等待已久的蔚蓝"
   }
 ];
 
