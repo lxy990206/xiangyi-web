@@ -1,6 +1,6 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-08-26T20:12:09.502Z (2026/8/27 04:12:09)
+ * 自动同步生成时间: 2026-08-26T20:14:27.772Z (2026/8/27 04:14:27)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
@@ -602,7 +602,7 @@ export const MEMBERS_DATA: Member[] = [
     "avatar": "https://i0.hdslb.com/bfs/face/596880ed16c37a2cfc5c5a50e39ef79b8ddbdf92.webp",
     "role": "网易云官方运营",
     "department": "admin",
-    "badge": "运营者",
+    "badge": "运营部",
     "bio": "网易云官方运营核心成员",
     "representativeWorks": [
       "《依你共鸣》作词"
@@ -732,7 +732,7 @@ export const MEMBERS_DATA: Member[] = [
     "avatar": "https://i0.hdslb.com/bfs/face/75c1b9ba2c956758a751113c5a6715bc8f492911.webp",
     "role": "ACE调校",
     "department": "tuning",
-    "badge": "主创社员",
+    "badge": "ACE调校",
     "bio": "10后P主；生日911；江苏省南通市第二忧郁",
     "representativeWorks": [
       "《瞬时爱恋》"
@@ -780,7 +780,7 @@ export const MEMBERS_DATA: Member[] = [
     "avatar": "https://i0.hdslb.com/bfs/face/c622da0655fc101c3bf98781b7a91e7b815500f3.jpg",
     "role": "编曲 / 作曲 / 作词",
     "department": "music",
-    "badge": "主创社员",
+    "badge": "副策划",
     "bio": "想听歌的可以去wyy找哦。新人锦依卫一只，会点作词作曲（刚入门，不喜轻喷），不定时更新，梦想是写出人人都喜欢的作品",
     "representativeWorks": [
       "《瞬时爱恋》"
