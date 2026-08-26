@@ -1,6 +1,6 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-08-26T20:19:38.456Z (2026/8/27 04:19:38)
+ * 自动同步生成时间: 2026-08-26T20:39:01.805Z (2026/8/27 04:39:01)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
@@ -797,7 +797,7 @@ export const MEMBERS_DATA: Member[] = [
     "role": "调校",
     "department": "tuning",
     "badge": "副创社员",
-    "bio": "洛佬，嘿嘿，佬 ，嘿嘿，佬 ，嘿嘿，佬，佬，我亲爱的佬 你怎么就是个纸片人啊",
+    "bio": "相依社新晋调音，擅长V家所有声库；潮汐回响乐队贝斯兼作曲（乐队已暂停活动），手下MV摄制团队可为相依社提供服务",
     "representativeWorks": [
       "《瞬时爱恋》"
     ],
