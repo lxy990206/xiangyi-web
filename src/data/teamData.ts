@@ -1,12 +1,12 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-08-27T11:11:37.948Z (2026/8/27 19:11:37)
+ * 自动同步生成时间: 2026-08-27T11:16:28.735Z (2026/8/27 19:16:28)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
 
 // 数据同步版本时间戳：GitHub 自动同步时更新，用于检测部署新版数据并自动刷新浏览器本地缓存
-export const TEAM_DATA_SYNCED_AT = '2026-08-27T11:11:37.948Z';
+export const TEAM_DATA_SYNCED_AT = '2026-08-27T11:16:28.736Z';
 
 export const TEAM_INFO = {
   "name": "相依社",
@@ -577,10 +577,10 @@ export const MEMBERS_DATA: Member[] = [
     "avatar": "https://i2.hdslb.com/bfs/face/f44ea56434217e8d1da1f3945a910d893f7708e4.jpg",
     "role": "作曲 / 编曲",
     "department": "music",
-    "badge": "作曲编曲",
+    "badge": "编曲师",
     "bio": "青年编曲人，擅长现代流行与电子融合曲风，为《瞬时爱恋》打造动人心弦的旋律。",
     "representativeWorks": [
-      "《瞬时爱恋》作曲/编曲"
+      "《依你共鸣》《瞬时爱恋》作曲/编曲"
     ],
     "socialLinks": {
       "bilibili": "https://space.bilibili.com/3632299860036209"
@@ -593,7 +593,7 @@ export const MEMBERS_DATA: Member[] = [
     "avatar": "https://i1.hdslb.com/bfs/face/bbfffcfb6a26a1547f8dc22f17c3d494dc1f1d46.webp",
     "role": "主力作词 / 视频制作",
     "department": "lyrics",
-    "badge": "词作/视频",
+    "badge": "副社长/主力作词",
     "bio": "相依团队主力词作与视频创作者，文字细腻富有哲学意境，擅长刻画深层情感。",
     "representativeWorks": [
       "《瞬时爱恋》作词",
@@ -610,7 +610,7 @@ export const MEMBERS_DATA: Member[] = [
     "avatar": "https://i0.hdslb.com/bfs/face/596880ed16c37a2cfc5c5a50e39ef79b8ddbdf92.webp",
     "role": "网易云官方运营",
     "department": "admin",
-    "badge": "运营者",
+    "badge": "运营部",
     "bio": "网易云官方运营核心成员",
     "representativeWorks": [
       "《依你共鸣》作词",
@@ -627,7 +627,7 @@ export const MEMBERS_DATA: Member[] = [
     "avatar": "https://i1.hdslb.com/bfs/face/11c324ca441c49c41835596e7779ca783e59c2d4.jpg",
     "role": "ACE Studio / Vocaloid 调教师 / 英文调教师",
     "department": "tuning",
-    "badge": "ACE调校",
+    "badge": "ACE调教师",
     "bio": "精通ACE Studio与各大歌姬引擎调校，对呼吸声与颤音细节把控极具匠心。",
     "representativeWorks": [
       "《瞬时爱恋》ACE调教，各种英文曲翻调"
@@ -695,7 +695,7 @@ export const MEMBERS_DATA: Member[] = [
     "role": "特邀混音师 / 编曲指导",
     "department": "music",
     "badge": "专业混音",
-    "bio": "知名音乐制作人与混音师，为《依你共鸣》提供专业的母带与人声混音支持。",
+    "bio": "音乐制作人与混音师，为《依你共鸣》提供专业的母带与人声混音支持。",
     "representativeWorks": [
       "《依你共鸣》混音母带",
       "《云天海》《跨越星海的合奏》"
@@ -711,7 +711,7 @@ export const MEMBERS_DATA: Member[] = [
     "avatar": "https://i0.hdslb.com/bfs/face/677185a1973a82ac4d7fe7b847a58923e7cbeb6e.jpg",
     "role": "混音师 / 调教师",
     "department": "music",
-    "badge": "混音工程师",
+    "badge": "调教师",
     "bio": "擅长声场空间构架与频段雕琢，为《瞬时爱恋》打造纯净通透的声音质感。",
     "representativeWorks": [
       "《瞬时爱恋》混音",
@@ -744,7 +744,7 @@ export const MEMBERS_DATA: Member[] = [
     "avatar": "https://i0.hdslb.com/bfs/face/75c1b9ba2c956758a751113c5a6715bc8f492911.webp",
     "role": "ACE调校",
     "department": "tuning",
-    "badge": "主创社员",
+    "badge": "调教师",
     "bio": "10后P主；生日911；江苏省南通市第二忧郁",
     "representativeWorks": [
       "《世末歌者》翻填《星炬不熄》翻调"
@@ -760,7 +760,7 @@ export const MEMBERS_DATA: Member[] = [
     "avatar": "https://i0.hdslb.com/bfs/face/29beff1d33442f45a4dc2a8a8bfd029a16d77933.jpg",
     "role": "编曲 / 作曲 / 作词",
     "department": "music",
-    "badge": "副创社员",
+    "badge": "相依合作伙伴",
     "bio": "How I am entirely hinges on how you perceive.",
     "representativeWorks": [
       "《冰风》《原许》"
@@ -776,7 +776,7 @@ export const MEMBERS_DATA: Member[] = [
     "avatar": "\thttps://i0.hdslb.com/bfs/face/829392f76e5d85dfeb2867230d3052ff34823bf7.jpg",
     "role": "编曲 / 作曲",
     "department": "music",
-    "badge": "主创社员",
+    "badge": "副创社员",
     "bio": "66ccff",
     "representativeWorks": [
       "暂无"
@@ -792,7 +792,7 @@ export const MEMBERS_DATA: Member[] = [
     "avatar": "https://i0.hdslb.com/bfs/face/c622da0655fc101c3bf98781b7a91e7b815500f3.jpg",
     "role": "编曲 / 作曲 / 作词",
     "department": "music",
-    "badge": "主创社员",
+    "badge": "副策划/曲词调混",
     "bio": "想听歌的可以去wyy找哦。新人锦依卫一只，会点作词作曲（刚入门，不喜轻喷），不定时更新，梦想是写出人人都喜欢的作品",
     "representativeWorks": [
       "《晚风邮差》《依生挚爱》"
