@@ -1,12 +1,12 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-08-27T13:00:18.795Z (2026/8/27 21:00:18)
+ * 自动同步生成时间: 2026-08-27T13:14:09.168Z (2026/8/27 21:14:09)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
 
 // 数据同步版本时间戳：GitHub 自动同步时更新，用于检测部署新版数据并自动刷新浏览器本地缓存
-export const TEAM_DATA_SYNCED_AT = '2026-08-27T13:00:18.795Z';
+export const TEAM_DATA_SYNCED_AT = '2026-08-27T13:14:09.168Z';
 
 export const TEAM_INFO = {
   "name": "相依社",
@@ -664,7 +664,7 @@ export const MEMBERS_DATA: Member[] = [
     "role": "PV师 / 动效监督",
     "department": "video",
     "badge": "PV制作",
-    "bio": "B站资深PV动画制作UP主（6万+关注）",
+    "bio": "B站PV动画制作UP主（6万+关注），网易云/酷狗:Taskkill_XiaoMa，邮箱：Taskkill_XiaoMa@163.com，欢迎老师们提出建议！",
     "representativeWorks": [
       "《瞬时爱恋》PV动画"
     ],
@@ -698,7 +698,7 @@ export const MEMBERS_DATA: Member[] = [
     "role": "特邀混音师 / 编曲指导",
     "department": "music",
     "badge": "专业混音",
-    "bio": "音乐制作人与混音师，为《依你共鸣》提供专业的母带与人声混音支持。",
+    "bio": "音乐制作人与混音师，为《依你共鸣》提供专业的母带与人声混音支持，GitHub@Takeoff0518",
     "representativeWorks": [
       "《依你共鸣》混音母带",
       "《云天海》《跨越星海的合奏》"
@@ -715,7 +715,7 @@ export const MEMBERS_DATA: Member[] = [
     "role": "混音师 / 调教师",
     "department": "music",
     "badge": "调教师",
-    "bio": "擅长声场空间构架与频段雕琢，为《瞬时爱恋》打造纯净通透的声音质感。",
+    "bio": "擅长调教，入门混音师，为《瞬时爱恋》打造纯净通透的声音质感，技术一般，大家轻喷QwQ",
     "representativeWorks": [
       "《瞬时爱恋》混音",
       "《薪火·十四载》"
