@@ -1,12 +1,12 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-08-27T08:44:05.960Z (2026/8/27 16:44:05)
+ * 自动同步生成时间: 2026-08-27T08:57:00.023Z (2026/8/27 16:57:00)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
 
 // 数据同步版本时间戳：GitHub 自动同步时更新，用于检测部署新版数据并自动刷新浏览器本地缓存
-export const TEAM_DATA_SYNCED_AT = '2026-08-27T08:44:05.960Z';
+export const TEAM_DATA_SYNCED_AT = '2026-08-27T08:57:00.026Z';
 
 export const TEAM_INFO = {
   "name": "相依社",
@@ -19,10 +19,10 @@ export const TEAM_INFO = {
   "description": "相依团队（Xiangyi Team / 相依社）成立于2025年9月6日，是由一群因对洛天依及中文虚拟歌姬文化怀揣纯粹热爱而聚首的年轻创作者发起创立的同人音乐社团。涵盖作曲编曲、作词、歌姬调校、曲绘插画、PV动画与混音母带全流程制作",
   "stats": {
     "worksCount": "2+",
-    "playCount": "5,000+",
+    "playCount": "10000+",
     "membersCount": "19",
     "albumsCount": "1",
-    "fanCount": "2,000+"
+    "fanCount": "30000+"
   },
   "socials": {
     "bilibili": "https://space.bilibili.com/3707032479730267",
