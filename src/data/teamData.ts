@@ -1,12 +1,12 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-08-27T02:49:38.722Z (2026/8/27 10:49:38)
+ * 自动同步生成时间: 2026-08-27T08:35:45.602Z (2026/8/27 16:35:45)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
 
 // 数据同步版本时间戳：GitHub 自动同步时更新，用于检测部署新版数据并自动刷新浏览器本地缓存
-export const TEAM_DATA_SYNCED_AT = '2026-08-26T19:20:06.167Z';
+export const TEAM_DATA_SYNCED_AT = '2026-08-27T08:35:45.605Z';
 
 export const TEAM_INFO = {
   "name": "相依社",
@@ -926,6 +926,35 @@ export const RECRUITMENT_POSITIONS: RecruitmentPosition[] = [
     "perks": [
       "作品全网正式发行署名",
       "与实力编曲人共同打磨作品"
+    ]
+  },
+  {
+    "id": "rec-1787819443624",
+    "title": "曲师（编曲作曲 一体机/半一体机）",
+    "department": "music",
+    "isUrgent": true,
+    "spots": "3-4名",
+    "requirements": [
+      "具备相关技能与作品积累",
+      "热爱洛天依与歌姬创作",
+      "熟悉主流DAW（如FL Studio、Cubase、Logic Pro，studio one等）",
+      "能独立完成旋律写作、和声编排及基础混音",
+      "有同人音乐或虚拟歌姬调校经验者优先",
+      "具备良好的沟通能力与团队协作意识"
+    ],
+    "responsibilities": [
+      "参与社团企划制作",
+      "根据企划主题完成原创曲目编曲与作曲",
+      "配合词作、调校、混音等环节推进制作流程",
+      "参与曲目风格方向讨论与音乐内容打磨",
+      "按项目周期提交阶段性demo与最终成曲"
+    ],
+    "perks": [
+      "官方Staff署名",
+      "社团内部交流支持",
+      "作品随企划在多平台发布推广",
+      "参与后续商业化企划的优先机会",
+      "制作过程中提供素材与音源资源支持"
     ]
   }
 ];
