@@ -1,12 +1,12 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-08-27T09:25:32.210Z (2026/8/27 17:25:32)
+ * 自动同步生成时间: 2026-08-27T11:09:09.165Z (2026/8/27 19:09:09)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
 
 // 数据同步版本时间戳：GitHub 自动同步时更新，用于检测部署新版数据并自动刷新浏览器本地缓存
-export const TEAM_DATA_SYNCED_AT = '2026-08-27T09:25:32.211Z';
+export const TEAM_DATA_SYNCED_AT = '2026-08-27T11:09:09.165Z';
 
 export const TEAM_INFO = {
   "name": "相依社",
@@ -564,7 +564,7 @@ export const MEMBERS_DATA: Member[] = [
     "representativeWorks": [
       "《依你共鸣》视频/策划",
       "《瞬时爱恋》联合策划",
-      "《薪火·十四载》《落叶坠海时》"
+      "《薪火·十四载》《落叶坠海时》《星海足迹》"
     ],
     "socialLinks": {
       "bilibili": "https://space.bilibili.com/3546570760915314"
@@ -613,7 +613,8 @@ export const MEMBERS_DATA: Member[] = [
     "badge": "运营者",
     "bio": "网易云官方运营核心成员",
     "representativeWorks": [
-      "《依你共鸣》作词"
+      "《依你共鸣》作词",
+      "《和你一起》原创"
     ],
     "socialLinks": {
       "bilibili": "https://space.bilibili.com/3493116082391421"
@@ -629,7 +630,7 @@ export const MEMBERS_DATA: Member[] = [
     "badge": "ACE调校",
     "bio": "精通ACE Studio与各大歌姬引擎调校，对呼吸声与颤音细节把控极具匠心。",
     "representativeWorks": [
-      "《瞬时爱恋》ACE调教"
+      "《瞬时爱恋》ACE调教，各种英文曲翻调"
     ],
     "socialLinks": {
       "bilibili": "https://space.bilibili.com/526817551"
@@ -679,7 +680,8 @@ export const MEMBERS_DATA: Member[] = [
     "bio": "专注于单曲封面排版、字体设计与官方视觉包装，呈现精致的同人设计美学。",
     "representativeWorks": [
       "《依你共鸣》封面",
-      "《瞬时爱恋》封面"
+      "《瞬时爱恋》封面",
+      "冰火谱面《为了你唱下去》《光与影的对白》《风之子》《蝴蝶》《黑凤梨》"
     ],
     "socialLinks": {
       "bilibili": "https://space.bilibili.com/1828433706"
@@ -695,7 +697,8 @@ export const MEMBERS_DATA: Member[] = [
     "badge": "专业混音",
     "bio": "知名音乐制作人与混音师，为《依你共鸣》提供专业的母带与人声混音支持。",
     "representativeWorks": [
-      "《依你共鸣》混音母带"
+      "《依你共鸣》混音母带",
+      "《云天海》《跨越星海的合奏》"
     ],
     "socialLinks": {
       "bilibili": "https://space.bilibili.com/507925563"
@@ -711,7 +714,8 @@ export const MEMBERS_DATA: Member[] = [
     "badge": "混音工程师",
     "bio": "擅长声场空间构架与频段雕琢，为《瞬时爱恋》打造纯净通透的声音质感。",
     "representativeWorks": [
-      "《瞬时爱恋》混音"
+      "《瞬时爱恋》混音",
+      "《薪火·十四载》"
     ],
     "socialLinks": {
       "bilibili": "https://space.bilibili.com/1182243105"
@@ -791,7 +795,7 @@ export const MEMBERS_DATA: Member[] = [
     "badge": "主创社员",
     "bio": "想听歌的可以去wyy找哦。新人锦依卫一只，会点作词作曲（刚入门，不喜轻喷），不定时更新，梦想是写出人人都喜欢的作品",
     "representativeWorks": [
-      "《晚风邮差》"
+      "《晚风邮差》《依生挚爱》"
     ],
     "socialLinks": {
       "bilibili": "https://space.bilibili.com/3494379832478659"
@@ -805,7 +809,7 @@ export const MEMBERS_DATA: Member[] = [
     "role": "调校",
     "department": "tuning",
     "badge": "副创社员",
-    "bio": "洛佬，嘿嘿，佬 ，嘿嘿，佬 ，嘿嘿，佬，佬，我亲爱的佬 你怎么就是个纸片人啊",
+    "bio": "相依社新晋调音，擅长V家所有声库；潮汐回响乐队贝斯兼作曲（乐队已暂停活动）；手下MV摄制团队可为相依社提供服务",
     "representativeWorks": [
       "暂无"
     ],
