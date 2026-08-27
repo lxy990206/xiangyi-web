@@ -37,6 +37,172 @@ export interface RepoTestResult {
   };
 }
 
+/** 上传文件大小上限：20MB */
+export const MAX_UPLOAD_FILE_SIZE = 20 * 1024 * 1024;
+
+/** 无 GitHub 配置时，本地 DataURL 回退存储上限（localStorage 约 5MB，预留其他数据空间） */
+export const MAX_LOCAL_DATAURL_SIZE = 3 * 1024 * 1024;
+
+/**
+ * 预览音频等媒体文件在仓库中的存放目录
+ */
+export const REPO_AUDIO_DIR = 'public/audio';
+
+/**
+ * 读取文件为 Base64（不含 DataURL 前缀）
+ */
+export function readFileAsBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      const base64 = result.split(',')[1] || '';
+      resolve(base64);
+    };
+    reader.onerror = () => reject(new Error('文件读取失败，请重试'));
+    reader.readAsDataURL(file);
+  });
+}
+
+/**
+ * 清洗文件名：去除非法字符与中文，保留扩展名
+ */
+export function sanitizeFileName(name: string): string {
+  const ext = (name.match(/\.[a-zA-Z0-9]+$/) || ['.mp3'])[0].toLowerCase();
+  const base = name
+    .replace(/\.[^.]+$/, '')
+    .replace(/[^a-zA-Z0-9_-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40);
+  return `${base || 'audio'}${ext}`;
+}
+
+/**
+ * 向 GitHub 仓库上传二进制文件（音频/图片等），返回站点内可访问的相对路径
+ */
+export async function uploadFileToGitHub(params: {
+  token: string;
+  repo: string;
+  branch: string;
+  path: string;       // 仓库内目标路径，如 public/audio/song-1.mp3
+  file: File;
+  commitMessage?: string;
+}): Promise<{ success: boolean; webPath: string; commitUrl?: string }> {
+  const { token, repo, branch, path, file, commitMessage } = params;
+  if (file.size > MAX_UPLOAD_FILE_SIZE) {
+    throw new Error(`文件大小 ${(file.size / 1024 / 1024).toFixed(1)}MB 超过 20MB 上传限制`);
+  }
+
+  const { owner, repo: repoName } = parseRepoString(repo);
+  const cleanToken = token.trim();
+  const targetBranch = branch.trim() || 'main';
+  const targetPath = path.replace(/^\/+/, '');
+  const base64Content = await readFileAsBase64(file);
+
+  // 获取已存在文件 SHA（覆盖更新时必需）
+  let existingSha: string | undefined;
+  try {
+    const fileRes = await fetch(
+      `https://api.github.com/repos/${owner}/${repoName}/contents/${targetPath}?ref=${encodeURIComponent(targetBranch)}`,
+      {
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+          'Authorization': `Bearer ${cleanToken}`,
+        }
+      }
+    );
+    if (fileRes.ok) {
+      existingSha = (await fileRes.json()).sha;
+    }
+  } catch { /* 新文件无需 SHA */ }
+
+  const payload: Record<string, any> = {
+    message: commitMessage || `chore(assets): 上传媒体文件 ${file.name}`,
+    content: base64Content,
+    branch: targetBranch
+  };
+  if (existingSha) payload.sha = existingSha;
+
+  const putRes = await fetch(
+    `https://api.github.com/repos/${owner}/${repoName}/contents/${targetPath}`,
+    {
+      method: 'PUT',
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'Authorization': `Bearer ${cleanToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload)
+    }
+  );
+
+  if (!putRes.ok) {
+    const err = await putRes.json().catch(() => ({}));
+    throw new Error(`文件上传失败: ${err.message || `HTTP ${putRes.status}`}`);
+  }
+
+  const resultData = await putRes.json();
+  // 站点相对路径（public 目录部署后可直接访问，兼容根路径与子路径部署）
+  const webPath = targetPath.replace(/^public\//, '');
+  return {
+    success: true,
+    webPath,
+    commitUrl: resultData.commit?.html_url
+  };
+}
+
+/**
+ * 删除 GitHub 仓库中的文件（用于清理被替换/清除的旧音频）
+ */
+export async function deleteRepoFile(params: {
+  token: string;
+  repo: string;
+  branch: string;
+  path: string;
+  commitMessage?: string;
+}): Promise<boolean> {
+  const { token, repo, branch, path, commitMessage } = params;
+  const { owner, repo: repoName } = parseRepoString(repo);
+  const cleanToken = token.trim();
+  const targetBranch = branch.trim() || 'main';
+  const targetPath = path.replace(/^\/+/, '');
+
+  try {
+    const fileRes = await fetch(
+      `https://api.github.com/repos/${owner}/${repoName}/contents/${targetPath}?ref=${encodeURIComponent(targetBranch)}`,
+      {
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+          'Authorization': `Bearer ${cleanToken}`,
+        }
+      }
+    );
+    if (!fileRes.ok) return false;
+    const fileData = await fileRes.json();
+    if (!fileData.sha) return false;
+
+    const delRes = await fetch(
+      `https://api.github.com/repos/${owner}/${repoName}/contents/${targetPath}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+          'Authorization': `Bearer ${cleanToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: commitMessage || `chore(assets): 清理无用媒体文件 ${targetPath}`,
+          sha: fileData.sha,
+          branch: targetBranch
+        })
+      }
+    );
+    return delRes.ok;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Safely encode a UTF-8 string to Base64 in the browser
  */
@@ -91,6 +257,9 @@ export function generateTeamDataTsCode(data: {
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
+
+// 数据同步版本时间戳：GitHub 自动同步时更新，用于检测部署新版数据并自动刷新浏览器本地缓存
+export const TEAM_DATA_SYNCED_AT = '${new Date().toISOString()}';
 
 `;
 

@@ -50,7 +50,9 @@ import {
   Pause,
   AlertTriangle,
   ArrowUpRight,
-  Code
+  Code,
+  Pin,
+  PinOff
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { 
@@ -71,6 +73,12 @@ import {
   syncDataToGitHub,
   downloadTsFile,
   generateTeamDataTsCode,
+  uploadFileToGitHub,
+  deleteRepoFile,
+  sanitizeFileName,
+  REPO_AUDIO_DIR,
+  MAX_UPLOAD_FILE_SIZE,
+  MAX_LOCAL_DATAURL_SIZE,
   RepoTestResult,
   SyncResult
 } from '../utils/githubSync';
@@ -141,6 +149,17 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
 
   // Audio testing state in admin
   const [previewPlayingSongId, setPreviewPlayingSongId] = useState<string | null>(null);
+  // 试听音频上传状态（上传至 GitHub 仓库持久化，重部署不丢失）
+  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
+  const [uploadAudioName, setUploadAudioName] = useState('');
+
+  // 读取已保存的 GitHub 同步配置（供音频文件上传复用）
+  const getGitSyncConfig = useCallback(() => {
+    const token = (localStorage.getItem('xiangyi_github_token') || '').trim();
+    const repo = (localStorage.getItem('xiangyi_github_repo') || '').trim();
+    const branch = (localStorage.getItem('xiangyi_github_branch') || 'main').trim() || 'main';
+    return { token, repo, branch };
+  }, []);
 
   // GitHub Sync state
   const [gitToken, setGitToken] = useState(() => localStorage.getItem('xiangyi_github_token') || '');
@@ -498,6 +517,91 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
     } finally {
       setIsFetchingAvatar(false);
     }
+  };
+
+  // ===== 试听音频上传：新文件上传后与新文件绑定 =====
+  // - 已配置 GitHub：音频文件上传至仓库 public/audio/ 持久化，重部署不丢失
+  // - 未配置 GitHub：小文件回退 DataURL 本地存储
+  // - 替换/清除时自动删除仓库中原绑定的无关音频文件
+  const handleAudioFileUpload = async (file: File) => {
+    if (!editingSong) return;
+    if (file.size > MAX_UPLOAD_FILE_SIZE) {
+      showToast(`音频文件 ${(file.size / 1024 / 1024).toFixed(1)}MB 超过 20MB 限制，请压缩后再上传`);
+      return;
+    }
+
+    const { token, repo, branch } = getGitSyncConfig();
+    const oldAudioUrl = editingSong.audioUrl || '';
+
+    setIsUploadingAudio(true);
+    setUploadAudioName(file.name);
+    try {
+      if (token && repo) {
+        // 上传至 GitHub 仓库，获得可持久化的站点相对路径
+        const fileName = `${editingSong.id}-${sanitizeFileName(file.name)}`;
+        const result = await uploadFileToGitHub({
+          token,
+          repo,
+          branch,
+          path: `${REPO_AUDIO_DIR}/${fileName}`,
+          file,
+          commitMessage: `chore(audio): 上传试听音频 ${fileName}`
+        });
+        setEditingSong({ ...editingSong, audioUrl: result.webPath, audioMode: 'custom' });
+        // 清理仓库中被替换的旧音频文件（仅清理本站 audio 目录，容错失败）
+        await cleanupOldRepoAudio(oldAudioUrl, result.webPath);
+        showToast(`音频【${file.name}】已上传至 GitHub 并完成绑定，站点重新部署后前台即可播放`);
+      } else {
+        // 未配置 GitHub：仅小文件允许 DataURL 本地回退
+        if (file.size > MAX_LOCAL_DATAURL_SIZE) {
+          showToast('未配置 GitHub 同步，超过 3MB 的音频无法本地暂存，请先在「GitHub 同步」中配置 Token 与仓库');
+          return;
+        }
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => resolve(ev.target?.result as string);
+          reader.onerror = () => reject(new Error('文件读取失败'));
+          reader.readAsDataURL(file);
+        });
+        setEditingSong({ ...editingSong, audioUrl: dataUrl, audioMode: 'custom' });
+        showToast(`音频【${file.name}】已绑定（本地暂存，建议配置 GitHub 同步以持久化）`);
+      }
+    } catch (e: any) {
+      showToast(`音频上传失败: ${e?.message || '未知错误'}`);
+    } finally {
+      setIsUploadingAudio(false);
+      setUploadAudioName('');
+    }
+  };
+
+  // 清除音频绑定：未上传音频则为空（回退旋律合成器），并删除仓库中的无关音频文件
+  const handleClearAudio = async () => {
+    if (!editingSong) return;
+    const oldAudioUrl = editingSong.audioUrl || '';
+    audioEngine.stop();
+    setEditingSong({ ...editingSong, audioUrl: '', audioMode: 'synth' });
+    if (oldAudioUrl) {
+      await cleanupOldRepoAudio(oldAudioUrl, '');
+      showToast('已清除音频源，将自动使用自适应旋律合成器');
+    } else {
+      showToast('已清除音频源，将自动使用自适应旋律合成器');
+    }
+  };
+
+  // 删除仓库中被替换/清除的旧音频文件（仅处理本站 audio 目录内文件，静默容错）
+  const cleanupOldRepoAudio = async (oldAudioUrl: string, newAudioUrl: string) => {
+    if (!oldAudioUrl || oldAudioUrl === newAudioUrl) return;
+    if (!oldAudioUrl.startsWith('audio/') && !oldAudioUrl.startsWith('/audio/')) return;
+    const { token, repo, branch } = getGitSyncConfig();
+    if (!token || !repo) return;
+    const repoPath = `${REPO_AUDIO_DIR}/${oldAudioUrl.replace(/^\/?audio\//, '')}`;
+    await deleteRepoFile({
+      token,
+      repo,
+      branch,
+      path: repoPath,
+      commitMessage: `chore(audio): 清理无用音频 ${repoPath}`
+    });
   };
 
   // ===== 退出维护界面时自动触发 GitHub 全量数据同步 =====
@@ -1591,6 +1695,10 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
                     <button
                       onClick={() => {
                         if (window.confirm(`确定要删除单曲《${song.title}》吗？`)) {
+                          // 同步清理仓库中该曲目绑定的音频文件
+                          if (song.audioUrl) {
+                            cleanupOldRepoAudio(song.audioUrl, '');
+                          }
                           deleteSong(song.id);
                           showToast(`已删除单曲《${song.title}》`);
                         }
@@ -2474,11 +2582,11 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
       {/* 7. 公告管理 */}
       {/* ========================================================= */}
       {activeAdminTab === 'announcements' && (
-        <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-6">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div className="p-4 sm:p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div>
               <h2 className="text-lg font-bold text-white">官方公告与滚动动态发布</h2>
-              <p className="text-xs text-slate-400">第一条公告将作为顶部常驻跑马灯显示</p>
+              <p className="text-xs text-slate-400">置顶公告优先在顶部跑马灯展示；未置顶时按列表顺序取第一条</p>
             </div>
             <button
               onClick={() => {
@@ -2488,11 +2596,12 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
                   title: '新公告标题',
                   tag: '通知',
                   content: '公告详细内容...',
-                  linkTab: 'home'
+                  linkTab: 'home',
+                  isPinned: false
                 });
                 setIsAnnModalOpen(true);
               }}
-              className="px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold text-xs flex items-center gap-1.5 hover:bg-cyan-400"
+              className="px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold text-xs flex items-center gap-1.5 hover:bg-cyan-400 shrink-0"
             >
               <Plus className="w-4 h-4" />
               <span>发布新公告</span>
@@ -2500,51 +2609,79 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
           </div>
 
           <div className="space-y-3">
-            {announcements.map((ann, idx) => (
-              <div
-                key={ann.id}
-                className="p-4 rounded-2xl bg-slate-950 border border-slate-800 hover:border-cyan-500/40 flex items-start justify-between gap-4"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                      {ann.tag}
-                    </span>
-                    <h4 className="font-bold text-sm text-white">{ann.title}</h4>
-                    {idx === 0 && (
-                      <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-bold">
-                        顶部展示中
+            {announcements.map((ann, idx) => {
+              // 展示顺序：置顶优先，其次保持列表顺序
+              const isFirstShown = ann.isPinned
+                ? announcements.findIndex((a) => a.isPinned) === idx
+                : !announcements.some((a) => a.isPinned) && idx === 0;
+              return (
+                <div
+                  key={ann.id}
+                  className={`p-4 rounded-2xl bg-slate-950 border flex items-start justify-between gap-4 transition-all ${
+                    ann.isPinned ? 'border-amber-500/50 shadow-md shadow-amber-500/10' : 'border-slate-800 hover:border-cyan-500/40'
+                  }`}
+                >
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                        {ann.tag}
                       </span>
-                    )}
+                      <h4 className="font-bold text-sm text-white break-all">{ann.title}</h4>
+                      {ann.isPinned && (
+                        <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-bold flex items-center gap-0.5">
+                          <Pin className="w-2.5 h-2.5" />
+                          已置顶
+                        </span>
+                      )}
+                      {isFirstShown && (
+                        <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-bold">
+                          顶部跑马灯展示中
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-300 break-words">{ann.content}</p>
+                    <p className="text-[11px] text-slate-400 font-mono">发布日期: {ann.date}</p>
                   </div>
-                  <p className="text-xs text-slate-300">{ann.content}</p>
-                  <p className="text-[11px] text-slate-400 font-mono">发布日期: {ann.date}</p>
-                </div>
 
-                <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    onClick={() => {
-                      setEditingAnn({ ...ann });
-                      setIsAnnModalOpen(true);
-                    }}
-                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-300 border border-slate-700"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (window.confirm(`确定要删除此条公告吗？`)) {
-                        deleteAnnouncement(ann.id);
-                        showToast('已删除该公告');
-                      }
-                    }}
-                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 border border-slate-700"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => {
+                        updateAnnouncement(ann.id, { isPinned: !ann.isPinned });
+                        showToast(!ann.isPinned ? `已置顶公告【${ann.title}】` : `已取消置顶公告【${ann.title}】`);
+                      }}
+                      className={`p-1.5 rounded-lg border transition-all ${
+                        ann.isPinned
+                          ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/40'
+                          : 'bg-slate-800 hover:bg-amber-500/20 text-slate-300 hover:text-amber-300 border-slate-700'
+                      }`}
+                      title={ann.isPinned ? '取消置顶' : '置顶该公告（优先在顶部跑马灯展示）'}
+                    >
+                      {ann.isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingAnn({ ...ann });
+                        setIsAnnModalOpen(true);
+                      }}
+                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-300 border border-slate-700"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`确定要删除此条公告吗？`)) {
+                          deleteAnnouncement(ann.id);
+                          showToast('已删除该公告');
+                        }
+                      }}
+                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 border border-slate-700"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -3292,9 +3429,9 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
                 {/* 音频文件上传与直链输入 */}
                 <div className="space-y-2">
                   <label className="block text-[11px] text-slate-300 font-semibold">
-                    1. 自动上传本地音频文件 (MP3 / WAV / M4A / AAC / FLAC / OGG)
+                    1. 自动上传本地音频文件 (MP3 / WAV / M4A / AAC / FLAC / OGG，最大 20MB)
                   </label>
-                  
+
                   <div className="relative border-2 border-dashed border-slate-700 hover:border-cyan-500/60 rounded-xl p-3 bg-slate-900/60 hover:bg-slate-900 transition-all flex flex-col sm:flex-row items-center gap-3 cursor-pointer group">
                     <input
                       type="file"
@@ -3302,33 +3439,32 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          const reader = new FileReader();
-                          reader.onload = (ev) => {
-                            const dataUrl = ev.target?.result as string;
-                            if (dataUrl) {
-                              setEditingSong({
-                                ...editingSong,
-                                audioUrl: dataUrl,
-                                audioMode: 'custom'
-                              });
-                              showToast(`音频文件【${file.name}】读取成功！`);
-                            }
-                          };
-                          reader.readAsDataURL(file);
+                          handleAudioFileUpload(file);
                         }
                         e.target.value = '';
                       }}
-                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      disabled={isUploadingAudio}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full disabled:cursor-wait"
                     />
-                    <Upload className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform shrink-0" />
+                    <Upload className={`w-5 h-5 text-cyan-400 shrink-0 transition-transform ${isUploadingAudio ? 'animate-pulse' : 'group-hover:scale-110'}`} />
                     <div className="text-center sm:text-left min-w-0 flex-1">
-                      <div className="text-xs text-slate-200">
-                        <span className="text-cyan-300 font-semibold underline underline-offset-2">点击选择本地音频文件</span>
-                        <span className="text-slate-400"> 或拖拽音频至此处</span>
-                      </div>
-                      <p className="text-[10px] text-slate-500 mt-0.5">
-                        自动转换为本地试听直链，保存后前台播放条与试听按钮即刻可用
-                      </p>
+                      {isUploadingAudio ? (
+                        <div className="text-xs text-cyan-300 font-semibold">
+                          正在上传音频【{uploadAudioName}】至 GitHub 仓库...
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-xs text-slate-200">
+                            <span className="text-cyan-300 font-semibold underline underline-offset-2">点击选择本地音频文件</span>
+                            <span className="text-slate-400"> 或拖拽音频至此处</span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 mt-0.5">
+                            {getGitSyncConfig().token && getGitSyncConfig().repo
+                              ? '上传后自动绑定新文件并持久化至仓库 public/audio/，重新部署不丢失'
+                              : '未配置 GitHub 同步时小文件仅本地暂存，建议先在「GitHub 同步」配置'}
+                          </p>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -3342,19 +3478,15 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
                         type="text"
                         value={editingSong.audioUrl || ''}
                         onChange={(e) => setEditingSong({ ...editingSong, audioUrl: e.target.value, audioMode: 'custom' })}
-                        placeholder="https://example.com/audio/song.mp3 或 data:audio/..."
-                        className="flex-1 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] text-cyan-300 font-mono"
+                        placeholder="https://example.com/audio/song.mp3 或 audio/xxx.mp3"
+                        className="flex-1 min-w-0 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] text-cyan-300 font-mono"
                       />
                       {editingSong.audioUrl && (
                         <button
                           type="button"
-                          onClick={() => {
-                            audioEngine.stop();
-                            setEditingSong({ ...editingSong, audioUrl: '', audioMode: 'synth' });
-                            showToast('已清除音频源，将自动使用自适应旋律合成器');
-                          }}
+                          onClick={handleClearAudio}
                           className="px-2.5 py-1 rounded-xl bg-slate-850 hover:bg-red-950 text-red-400 border border-slate-700 text-[10px] font-semibold flex items-center gap-1 cursor-pointer shrink-0"
-                          title="清除自定义音频，恢复为网页自适应旋律合成模式"
+                          title="清除自定义音频（同步删除仓库中的音频文件），恢复为网页自适应旋律合成模式"
                         >
                           <Trash2 className="w-3 h-3" />
                           <span>清除</span>
@@ -3566,6 +3698,25 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
                   className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-100"
                 />
               </div>
+
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">
+                  代表作品 / 企划 <span className="text-slate-500 font-normal text-[10px]">（每行一条，展示于成员卡片）</span>
+                </label>
+                <textarea
+                  rows={3}
+                  value={(editingMember.representativeWorks || []).join('\n')}
+                  onChange={(e) => setEditingMember({
+                    ...editingMember,
+                    representativeWorks: e.target.value.split('\n')
+                  })}
+                  placeholder={'例：\n《依你共鸣》\n《瞬时爱恋》\n2026春节企划'}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 leading-relaxed"
+                />
+                <p className="text-[10px] text-slate-500 mt-1">
+                  当前 {(editingMember.representativeWorks || []).filter((w) => w.trim().length > 0).length} 条 · 留空则成员卡片不显示代表作品区块
+                </p>
+              </div>
             </div>
 
             <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
@@ -3577,12 +3728,17 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
               </button>
               <button
                 onClick={() => {
+                  // 保存时清洗代表作：去除首尾空白与空行
+                  const cleanedWorks = (editingMember.representativeWorks || [])
+                    .map((w) => w.trim())
+                    .filter((w) => w.length > 0);
+                  const memberToSave = { ...editingMember, representativeWorks: cleanedWorks };
                   const exists = members.some((m) => m.id === editingMember.id);
                   if (exists) {
-                    updateMember(editingMember.id, editingMember);
+                    updateMember(editingMember.id, memberToSave);
                     showToast(`已更新成员【${editingMember.name}】信息`);
                   } else {
-                    addMember(editingMember);
+                    addMember(memberToSave);
                     showToast(`已添加成员【${editingMember.name}】`);
                   }
                   setIsMemberModalOpen(false);
@@ -3910,6 +4066,20 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
                   onChange={(e) => setEditingAnn({ ...editingAnn, content: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-100"
                 />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="annPinned"
+                  checked={Boolean(editingAnn.isPinned)}
+                  onChange={(e) => setEditingAnn({ ...editingAnn, isPinned: e.target.checked })}
+                  className="w-4 h-4 accent-amber-500 cursor-pointer"
+                />
+                <label htmlFor="annPinned" className="font-semibold text-slate-300 cursor-pointer select-none">
+                  置顶该公告（Pin to Top）
+                </label>
+                <span className="text-[10px] text-slate-500">置顶后优先在网站顶部跑马灯展示</span>
               </div>
             </div>
 

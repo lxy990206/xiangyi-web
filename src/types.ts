@@ -106,13 +106,14 @@ export interface Album {
 export interface Collaboration {
   id: string;
   title: string;
-  partnerCircle: string;
-  eventName: string;
+  partner: string;
   year: string;
+  type: 'cross-circle' | 'event' | 'single' | string;
   coverUrl: string;
   role: string;
   description: string;
   bilibiliBvid: string;
+  tags?: string[];
 }
 
 export type Department = 
@@ -187,4 +188,5 @@ export interface Announcement {
   tag: '招募' | '新歌' | '新曲' | '企划' | '纪念' | '通知' | string;
   content: string;
   linkTab?: NavTab;
+  isPinned?: boolean; // 置顶公告（优先于普通公告在顶部跑马灯展示）
 }

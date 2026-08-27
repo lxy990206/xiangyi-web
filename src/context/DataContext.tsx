@@ -14,7 +14,8 @@ import {
   MEMBERS_DATA, 
   ANNOUNCEMENTS, 
   RECRUITMENT_POSITIONS, 
-  COLLABORATIONS_DATA 
+  COLLABORATIONS_DATA,
+  TEAM_DATA_SYNCED_AT
 } from '../data/teamData';
 
 export type TeamInfoType = typeof DEFAULT_TEAM_INFO;
@@ -70,89 +71,98 @@ interface DataContextType {
 const STORAGE_KEY = 'xiangyi_site_data_v2';
 const ADMIN_AUTH_KEY = 'xiangyi_admin_session_v2';
 const ADMIN_PASS_KEY = 'xiangyi_admin_password_v2';
+// 缓存版本管理：记录本地数据所基于的同步版本 & 本地最后修改时间
+const DATA_SYNCED_KEY = 'xiangyi_data_synced_at';
+const DATA_MODIFIED_KEY = 'xiangyi_local_modified_at';
 
 const DEFAULT_ADMIN_PASS = 'xiangyi2025';
+
+const CODE_SYNCED_AT_MS = Date.parse(TEAM_DATA_SYNCED_AT) || 0;
+
+/**
+ * 缓存刷新策略：
+ * - 代码内置默认数据版本（TEAM_DATA_SYNCED_AT，随部署更新）比本地缓存所基于的版本新
+ *   且本地没有比其更新的未同步修改时 → 自动采用新部署数据，避免访客一直看到旧缓存；
+ * - 本地在部署版本之后有修改（后台编辑未同步）→ 保留本地数据，防止丢失未同步修改。
+ */
+const shouldAdoptNewDefaults = (() => {
+  let cached: boolean | null = null;
+  return (): boolean => {
+    if (cached !== null) return cached;
+    try {
+      const modifiedAt = Date.parse(localStorage.getItem(DATA_MODIFIED_KEY) || '') || 0;
+      const syncedAt = Date.parse(localStorage.getItem(DATA_SYNCED_KEY) || '') || 0;
+      if (modifiedAt > CODE_SYNCED_AT_MS) {
+        // 本地有更新的未同步修改，保留本地
+        cached = false;
+        return false;
+      }
+      if (CODE_SYNCED_AT_MS > syncedAt) {
+        // 首次访问或检测到新版部署数据 → 采用默认并记录版本
+        localStorage.setItem(DATA_SYNCED_KEY, TEAM_DATA_SYNCED_AT);
+        cached = true;
+        return true;
+      }
+    } catch {
+      cached = false;
+      return false;
+    }
+    cached = false;
+    return false;
+  };
+})();
+
+/** 读取一份数据切片：部署版本更新时直接采用默认值，否则读取本地缓存 */
+const loadDataSlice = <T,>(subKey: string, defaults: T): T => {
+  if (!shouldAdoptNewDefaults()) {
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_${subKey}`);
+      if (saved) return JSON.parse(saved) as T;
+    } catch { /* 解析失败回退默认值 */ }
+  }
+  return defaults;
+};
+
+/** 标记本地数据被修改（用于区分"未同步的本地编辑"与"可直接覆盖的旧缓存"） */
+const touchLocalModified = () => {
+  try {
+    localStorage.setItem(DATA_MODIFIED_KEY, new Date().toISOString());
+  } catch { /* ignore */ }
+};
 
 const DataContext = createContext<DataContextType | null>(null);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // 1. Initialize data from localStorage or default
   const [teamInfo, setTeamInfo] = useState<TeamInfoType>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY}_teamInfo`);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          ...DEFAULT_TEAM_INFO,
-          ...parsed,
-          stats: { ...DEFAULT_TEAM_INFO.stats, ...(parsed.stats || {}) },
-          socials: { ...DEFAULT_TEAM_INFO.socials, ...(parsed.socials || {}) },
-          navigationConfig: { ...DEFAULT_TEAM_INFO.navigationConfig, ...(parsed.navigationConfig || {}) },
-          recruitmentBanner: { ...DEFAULT_TEAM_INFO.recruitmentBanner, ...(parsed.recruitmentBanner || {}) },
-          milestones: parsed.milestones?.length ? parsed.milestones : DEFAULT_TEAM_INFO.milestones,
-          faqs: parsed.faqs?.length ? parsed.faqs : DEFAULT_TEAM_INFO.faqs,
-          toolLinks: parsed.toolLinks?.length ? parsed.toolLinks : DEFAULT_TEAM_INFO.toolLinks,
-        };
-      }
-      return DEFAULT_TEAM_INFO;
-    } catch {
-      return DEFAULT_TEAM_INFO;
+    const parsed = loadDataSlice<Partial<TeamInfoType> | null>('teamInfo', null);
+    if (parsed) {
+      return {
+        ...DEFAULT_TEAM_INFO,
+        ...parsed,
+        stats: { ...DEFAULT_TEAM_INFO.stats, ...(parsed.stats || {}) },
+        socials: { ...DEFAULT_TEAM_INFO.socials, ...(parsed.socials || {}) },
+        navigationConfig: { ...DEFAULT_TEAM_INFO.navigationConfig, ...(parsed.navigationConfig || {}) },
+        recruitmentBanner: { ...DEFAULT_TEAM_INFO.recruitmentBanner, ...(parsed.recruitmentBanner || {}) },
+        milestones: parsed.milestones?.length ? parsed.milestones : DEFAULT_TEAM_INFO.milestones,
+        faqs: parsed.faqs?.length ? parsed.faqs : DEFAULT_TEAM_INFO.faqs,
+        toolLinks: parsed.toolLinks?.length ? parsed.toolLinks : DEFAULT_TEAM_INFO.toolLinks,
+      };
     }
+    return DEFAULT_TEAM_INFO;
   });
 
-  const [songs, setSongs] = useState<Song[]>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY}_songs`);
-      return saved ? JSON.parse(saved) : SONGS_DATA;
-    } catch {
-      return SONGS_DATA;
-    }
-  });
+  const [songs, setSongs] = useState<Song[]>(() => loadDataSlice<Song[]>('songs', SONGS_DATA));
 
-  const [albums, setAlbums] = useState<Album[]>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY}_albums`);
-      return saved ? JSON.parse(saved) : ALBUMS_DATA;
-    } catch {
-      return ALBUMS_DATA;
-    }
-  });
+  const [albums, setAlbums] = useState<Album[]>(() => loadDataSlice<Album[]>('albums', ALBUMS_DATA));
 
-  const [members, setMembers] = useState<Member[]>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY}_members`);
-      return saved ? JSON.parse(saved) : MEMBERS_DATA;
-    } catch {
-      return MEMBERS_DATA;
-    }
-  });
+  const [members, setMembers] = useState<Member[]>(() => loadDataSlice<Member[]>('members', MEMBERS_DATA));
 
-  const [announcements, setAnnouncements] = useState<Announcement[]>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY}_announcements`);
-      return saved ? JSON.parse(saved) : ANNOUNCEMENTS;
-    } catch {
-      return ANNOUNCEMENTS;
-    }
-  });
+  const [announcements, setAnnouncements] = useState<Announcement[]>(() => loadDataSlice<Announcement[]>('announcements', ANNOUNCEMENTS));
 
-  const [recruitmentPositions, setRecruitmentPositions] = useState<RecruitmentPosition[]>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY}_recruitment`);
-      return saved ? JSON.parse(saved) : RECRUITMENT_POSITIONS;
-    } catch {
-      return RECRUITMENT_POSITIONS;
-    }
-  });
+  const [recruitmentPositions, setRecruitmentPositions] = useState<RecruitmentPosition[]>(() => loadDataSlice<RecruitmentPosition[]>('recruitment', RECRUITMENT_POSITIONS));
 
-  const [collaborations, setCollaborations] = useState<Collaboration[]>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY}_collaborations`);
-      return saved ? JSON.parse(saved) : COLLABORATIONS_DATA;
-    } catch {
-      return COLLABORATIONS_DATA;
-    }
-  });
+  const [collaborations, setCollaborations] = useState<Collaboration[]>(() => loadDataSlice<Collaboration[]>('collaborations', COLLABORATIONS_DATA));
 
   // Admin Auth State
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
@@ -222,6 +232,26 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [collaborations]);
 
+  // 跨标签页实时同步：其他标签页修改数据时，本标签页立即刷新显示
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (!e.key || !e.newValue || !e.key.startsWith(`${STORAGE_KEY}_`)) return;
+      const subKey = e.key.slice(STORAGE_KEY.length + 1);
+      try {
+        const value = JSON.parse(e.newValue);
+        if (subKey === 'teamInfo' && value) setTeamInfo((prev) => ({ ...prev, ...value }));
+        else if (subKey === 'songs' && Array.isArray(value)) setSongs(value);
+        else if (subKey === 'albums' && Array.isArray(value)) setAlbums(value);
+        else if (subKey === 'members' && Array.isArray(value)) setMembers(value);
+        else if (subKey === 'announcements' && Array.isArray(value)) setAnnouncements(value);
+        else if (subKey === 'recruitment' && Array.isArray(value)) setRecruitmentPositions(value);
+        else if (subKey === 'collaborations' && Array.isArray(value)) setCollaborations(value);
+      } catch { /* 忽略无效数据 */ }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
   // Auth Methods
   const getStoredPassword = () => {
     return localStorage.getItem(ADMIN_PASS_KEY) || DEFAULT_ADMIN_PASS;
@@ -263,36 +293,44 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // CRUD Methods
+  // CRUD Methods（所有修改均标记本地修改时间，用于缓存版本判定）
   const updateTeamInfo = (info: TeamInfoType) => {
+    touchLocalModified();
     setTeamInfo(info);
   };
 
   const addSong = (song: Song) => {
+    touchLocalModified();
     setSongs((prev) => [song, ...prev]);
   };
 
   const updateSong = (id: string, updated: Partial<Song>) => {
+    touchLocalModified();
     setSongs((prev) => prev.map((s) => (s.id === id ? { ...s, ...updated } : s)));
   };
 
   const deleteSong = (id: string) => {
+    touchLocalModified();
     setSongs((prev) => prev.filter((s) => s.id !== id));
   };
 
   const addAlbum = (album: Album) => {
+    touchLocalModified();
     setAlbums((prev) => [album, ...prev]);
   };
 
   const updateAlbum = (id: string, updated: Partial<Album>) => {
+    touchLocalModified();
     setAlbums((prev) => prev.map((a) => (a.id === id ? { ...a, ...updated } : a)));
   };
 
   const deleteAlbum = (id: string) => {
+    touchLocalModified();
     setAlbums((prev) => prev.filter((a) => a.id !== id));
   };
 
   const addMember = (member: Member) => {
+    touchLocalModified();
     setMembers((prev) => [...prev, member]);
     // update stats count
     setTeamInfo((prev) => ({
@@ -305,10 +343,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateMember = (id: string, updated: Partial<Member>) => {
+    touchLocalModified();
     setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, ...updated } : m)));
   };
 
   const deleteMember = (id: string) => {
+    touchLocalModified();
     setMembers((prev) => {
       const next = prev.filter((m) => m.id !== id);
       setTeamInfo((prevInfo) => ({
@@ -323,38 +363,47 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addAnnouncement = (ann: Announcement) => {
+    touchLocalModified();
     setAnnouncements((prev) => [ann, ...prev]);
   };
 
   const updateAnnouncement = (id: string, updated: Partial<Announcement>) => {
+    touchLocalModified();
     setAnnouncements((prev) => prev.map((a) => (a.id === id ? { ...a, ...updated } : a)));
   };
 
   const deleteAnnouncement = (id: string) => {
+    touchLocalModified();
     setAnnouncements((prev) => prev.filter((a) => a.id !== id));
   };
 
   const addRecruitmentPosition = (pos: RecruitmentPosition) => {
+    touchLocalModified();
     setRecruitmentPositions((prev) => [...prev, pos]);
   };
 
   const updateRecruitmentPosition = (id: string, updated: Partial<RecruitmentPosition>) => {
+    touchLocalModified();
     setRecruitmentPositions((prev) => prev.map((p) => (p.id === id ? { ...p, ...updated } : p)));
   };
 
   const deleteRecruitmentPosition = (id: string) => {
+    touchLocalModified();
     setRecruitmentPositions((prev) => prev.filter((p) => p.id !== id));
   };
 
   const addCollaboration = (collab: Collaboration) => {
+    touchLocalModified();
     setCollaborations((prev) => [collab, ...prev]);
   };
 
   const updateCollaboration = (id: string, updated: Partial<Collaboration>) => {
+    touchLocalModified();
     setCollaborations((prev) => prev.map((c) => (c.id === id ? { ...c, ...updated } : c)));
   };
 
   const deleteCollaboration = (id: string) => {
+    touchLocalModified();
     setCollaborations((prev) => prev.filter((c) => c.id !== id));
   };
 
@@ -380,6 +429,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!data || typeof data !== 'object') {
         return { success: false, message: 'JSON 数据格式无效' };
       }
+      touchLocalModified();
       if (data.teamInfo) setTeamInfo(data.teamInfo);
       if (Array.isArray(data.songs)) setSongs(data.songs);
       if (Array.isArray(data.albums)) setAlbums(data.albums);
@@ -411,6 +461,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem(`${STORAGE_KEY}_announcements`);
       localStorage.removeItem(`${STORAGE_KEY}_recruitment`);
       localStorage.removeItem(`${STORAGE_KEY}_collaborations`);
+      // 重置后本地与代码默认版本一致：清除本地修改标记，登记当前代码版本
+      localStorage.removeItem(DATA_MODIFIED_KEY);
+      localStorage.setItem(DATA_SYNCED_KEY, TEAM_DATA_SYNCED_AT);
     } catch {}
   };
 
