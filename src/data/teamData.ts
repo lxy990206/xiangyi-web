@@ -1,12 +1,12 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-08-27T11:09:09.165Z (2026/8/27 19:09:09)
+ * 自动同步生成时间: 2026-08-27T11:11:37.948Z (2026/8/27 19:11:37)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
 
 // 数据同步版本时间戳：GitHub 自动同步时更新，用于检测部署新版数据并自动刷新浏览器本地缓存
-export const TEAM_DATA_SYNCED_AT = '2026-08-27T11:09:09.165Z';
+export const TEAM_DATA_SYNCED_AT = '2026-08-27T11:11:37.948Z';
 
 export const TEAM_INFO = {
   "name": "相依社",
@@ -559,7 +559,7 @@ export const MEMBERS_DATA: Member[] = [
     "avatar": "https://i0.hdslb.com/bfs/face/85c4b79d5cf79b658cadd029ddd76dd42773ef2a.jpg",
     "role": "联合发起人 / 策划 / 视频制作",
     "department": "admin",
-    "badge": "核心主创",
+    "badge": "创始人/主策划",
     "bio": "中V PV师创作者，相依团队联合发起人与主力策划，统筹视频制作与企划宣发。",
     "representativeWorks": [
       "《依你共鸣》视频/策划",
