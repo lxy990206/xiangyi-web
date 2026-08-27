@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+/* 深色主题原生控件适配：修正输入指针（光标）、日期选择器与下拉框的前端显示 */
+:root {
+  color-scheme: dark;
+}
+
+input,
+textarea,
+select {
+  caret-color: #22d3ee; /* 深色背景下显示青色光标，修复输入指针不可见/显示异常 */
+}
+
 @layer utilities {
   .animate-spin-slow {
     animation: spin 12s linear infinite;

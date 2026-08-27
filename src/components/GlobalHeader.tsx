@@ -18,7 +18,10 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
   onOpenRecruitment,
 }) => {
   const { teamInfo, announcements } = useData();
-  const currentAnnouncement = announcements[0];
+  // 置顶公告优先展示；无置顶时按列表顺序取第一条
+  const currentAnnouncement = announcements.some((a) => a.isPinned)
+    ? announcements.find((a) => a.isPinned)!
+    : announcements[0];
 
   return (
     <header className="sticky top-0 z-40 w-full bg-slate-900/95 backdrop-blur-md border-b border-cyan-500/20 text-slate-100 shadow-md">
@@ -41,21 +44,21 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
           <div className="h-4 w-px bg-slate-700 hidden sm:block shrink-0" />
 
           {/* Announcement Ticker with Click Action */}
-          <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden bg-slate-800/80 hover:bg-slate-800 transition-colors border border-cyan-500/30 rounded-full px-3 py-1 text-xs">
+          <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden bg-slate-800/80 hover:bg-slate-800 transition-colors border border-cyan-500/30 rounded-full px-2.5 sm:px-3 py-1 text-xs">
             <Megaphone className="w-3.5 h-3.5 text-cyan-400 shrink-0 animate-bounce" />
-            <span className="bg-cyan-500/20 text-cyan-300 font-semibold px-1.5 py-0.5 rounded text-[11px] shrink-0">
+            <span className="bg-cyan-500/20 text-cyan-300 font-semibold px-1.5 py-0.5 rounded text-[11px] shrink-0 hidden min-[420px]:inline">
               {currentAnnouncement ? currentAnnouncement.tag : '公告'}
             </span>
             <button
               onClick={() => onNavigate(currentAnnouncement?.linkTab || 'recruitment')}
-              className="text-slate-200 hover:text-cyan-300 transition-colors truncate text-left font-medium flex-1 cursor-pointer"
+              className="text-slate-200 hover:text-cyan-300 transition-colors truncate text-left font-medium flex-1 min-w-0 cursor-pointer"
               title="点击查看详情"
             >
               {currentAnnouncement ? currentAnnouncement.title : '【公告】欢迎访问相依社官方网站'}
             </button>
             <button
               onClick={onOpenRecruitment}
-              className="shrink-0 flex items-center gap-1 text-[11px] font-medium text-cyan-400 hover:text-cyan-200 transition-colors ml-1 bg-cyan-950/60 hover:bg-cyan-900/80 px-2 py-0.5 rounded-full border border-cyan-500/40"
+              className="shrink-0 hidden min-[420px]:flex items-center gap-1 text-[11px] font-medium text-cyan-400 hover:text-cyan-200 transition-colors ml-1 bg-cyan-950/60 hover:bg-cyan-900/80 px-2 py-0.5 rounded-full border border-cyan-500/40"
             >
               <span>加入我们</span>
               <ArrowRight className="w-3 h-3" />

@@ -51,14 +51,22 @@ export const CollaborationsView: React.FC = () => {
                     {collab.title}
                   </h3>
                   <div className="flex items-center gap-2 text-xs text-blue-400 font-medium mt-1">
-                    <Users className="w-3.5 h-3.5" />
-                    <span>合作方：{collab.partnerCircle}</span>
+                    <Users className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">合作方：{collab.partner}</span>
                   </div>
                 </div>
 
                 <div className="p-2.5 rounded-lg bg-slate-800/60 border border-slate-800 text-xs space-y-1 text-slate-300">
-                  <div className="text-slate-400">所属展演 / 企划：{collab.eventName}</div>
                   <div className="text-cyan-300 font-semibold">相依负责职责：{collab.role}</div>
+                  {collab.tags && collab.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-0.5">
+                      {collab.tags.map((tag) => (
+                        <span key={tag} className="px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-300 border border-blue-500/25 text-[10px] font-medium">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <p className="text-xs text-slate-300 leading-relaxed">

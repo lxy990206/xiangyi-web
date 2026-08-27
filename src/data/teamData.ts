@@ -5,6 +5,9 @@
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
 
+// 数据同步版本时间戳：GitHub 自动同步时更新，用于检测部署新版数据并自动刷新浏览器本地缓存
+export const TEAM_DATA_SYNCED_AT = '2026-08-26T19:20:06.167Z';
+
 export const TEAM_INFO = {
   "name": "相依团队",
   "nameEn": "Xiangyi Team (相依社)",
