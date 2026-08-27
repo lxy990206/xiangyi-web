@@ -1,12 +1,12 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-08-27T08:57:00.023Z (2026/8/27 16:57:00)
+ * 自动同步生成时间: 2026-08-27T09:25:32.210Z (2026/8/27 17:25:32)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
 
 // 数据同步版本时间戳：GitHub 自动同步时更新，用于检测部署新版数据并自动刷新浏览器本地缓存
-export const TEAM_DATA_SYNCED_AT = '2026-08-27T08:57:00.026Z';
+export const TEAM_DATA_SYNCED_AT = '2026-08-27T09:25:32.211Z';
 
 export const TEAM_INFO = {
   "name": "相依社",
@@ -563,7 +563,8 @@ export const MEMBERS_DATA: Member[] = [
     "bio": "中V PV师创作者，相依团队联合发起人与主力策划，统筹视频制作与企划宣发。",
     "representativeWorks": [
       "《依你共鸣》视频/策划",
-      "《瞬时爱恋》联合策划"
+      "《瞬时爱恋》联合策划",
+      "《薪火·十四载》《落叶坠海时》"
     ],
     "socialLinks": {
       "bilibili": "https://space.bilibili.com/3546570760915314"
@@ -726,7 +727,7 @@ export const MEMBERS_DATA: Member[] = [
     "badge": "运营部",
     "bio": "哔站官方运营者",
     "representativeWorks": [
-      "《瞬时爱恋》"
+      "网站开发，bot开发"
     ],
     "socialLinks": {
       "bilibili": "https://space.bilibili.com/135513898"
@@ -742,7 +743,7 @@ export const MEMBERS_DATA: Member[] = [
     "badge": "主创社员",
     "bio": "10后P主；生日911；江苏省南通市第二忧郁",
     "representativeWorks": [
-      "《瞬时爱恋》"
+      "《世末歌者》翻填《星炬不熄》翻调"
     ],
     "socialLinks": {
       "bilibili": "https://space.bilibili.com/1207927671"
@@ -758,7 +759,7 @@ export const MEMBERS_DATA: Member[] = [
     "badge": "副创社员",
     "bio": "How I am entirely hinges on how you perceive.",
     "representativeWorks": [
-      "《瞬时爱恋》"
+      "《冰风》《原许》"
     ],
     "socialLinks": {
       "bilibili": "https://space.bilibili.com/3493272775297805"
@@ -774,7 +775,7 @@ export const MEMBERS_DATA: Member[] = [
     "badge": "主创社员",
     "bio": "66ccff",
     "representativeWorks": [
-      "《瞬时爱恋》"
+      "暂无"
     ],
     "socialLinks": {
       "bilibili": "https://space.bilibili.com/56849203"
@@ -790,7 +791,7 @@ export const MEMBERS_DATA: Member[] = [
     "badge": "主创社员",
     "bio": "想听歌的可以去wyy找哦。新人锦依卫一只，会点作词作曲（刚入门，不喜轻喷），不定时更新，梦想是写出人人都喜欢的作品",
     "representativeWorks": [
-      "《瞬时爱恋》"
+      "《晚风邮差》"
     ],
     "socialLinks": {
       "bilibili": "https://space.bilibili.com/3494379832478659"
@@ -806,7 +807,7 @@ export const MEMBERS_DATA: Member[] = [
     "badge": "副创社员",
     "bio": "洛佬，嘿嘿，佬 ，嘿嘿，佬 ，嘿嘿，佬，佬，我亲爱的佬 你怎么就是个纸片人啊",
     "representativeWorks": [
-      "《瞬时爱恋》"
+      "暂无"
     ],
     "socialLinks": {
       "bilibili": "https://space.bilibili.com/3493107196758106"
@@ -822,7 +823,7 @@ export const MEMBERS_DATA: Member[] = [
     "badge": "副创社员",
     "bio": "三大基本策略：努力做好每一期视频；积极努力寻求对外合作；积极支持填翻圈同志",
     "representativeWorks": [
-      "《瞬时爱恋》"
+      "【【碎镜&安德的游戏】“写下这传奇，让世界聆听”【2026科幻拜年纪单品】feat.洛天依-哔哩哔哩】 https://b23.tv/3mmjOov"
     ],
     "socialLinks": {
       "bilibili": "https://space.bilibili.com/1951377998"
@@ -838,10 +839,10 @@ export const MEMBERS_DATA: Member[] = [
     "badge": "主创社员/曲绘",
     "bio": "相依主力画师",
     "representativeWorks": [
-      "《瞬时爱恋》"
+      "【新人翻调】反乌托邦 feat.初音ミク 洛天依-哔哩哔哩】 https://b23.tv/nZGSWo7"
     ],
     "socialLinks": {
-      "bilibili": "https://b23.tv/oYR5ej2https://space.bilibili.com/3546735332821185"
+      "bilibili": "https://space.bilibili.com/3546735332821185"
     },
     "joinDate": "2026.01"
   }
