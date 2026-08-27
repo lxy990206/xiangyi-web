@@ -1,13 +1,13 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-08-27T01:29:45.580Z (2026/8/27 09:29:45)
+ * 自动同步生成时间: 2026-08-27T02:49:38.722Z (2026/8/27 10:49:38)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
 
 export const TEAM_INFO = {
-  "name": "相依团队",
-  "nameEn": "Xiangyi Team (相依社)",
+  "name": "相依社",
+  "nameEn": "Xiangyi Team (相依团队)",
   "slogan": "以心相依，以曲共鸣",
   "subSlogan": "以旋律筑梦，用歌声定格每一个动人心魄的瞬间",
   "foundedYear": "2025",
@@ -17,7 +17,7 @@ export const TEAM_INFO = {
   "stats": {
     "worksCount": "2+",
     "playCount": "5,000+",
-    "membersCount": "18",
+    "membersCount": "19",
     "albumsCount": "1",
     "fanCount": "2,000+"
   },
@@ -51,8 +51,8 @@ export const TEAM_INFO = {
   "recruitmentBanner": {
     "enabled": true,
     "badge": "急招中",
-    "title": "相依团队2025春季企划 · 招募曲绘师 / PV动效师",
-    "desc": "多首原创洛天依/星尘单曲企划分镜已就绪，欢迎携作品投递交流！",
+    "title": "相依团队2026招募曲绘师 / PV动效师",
+    "desc": "急需大量优秀游离创作者加入，一起携手创作吧！",
     "buttonText": "查看招募详情"
   },
   "milestones": [
@@ -550,9 +550,9 @@ export const MEMBERS_DATA: Member[] = [
     "id": "mem-2",
     "name": "light闪电ing",
     "avatar": "https://i0.hdslb.com/bfs/face/85c4b79d5cf79b658cadd029ddd76dd42773ef2a.jpg",
-    "role": "相依创始人 / 策划 / 视频制作",
+    "role": "联合发起人 / 策划 / 视频制作",
     "department": "admin",
-    "badge": "相依创始人",
+    "badge": "核心主创",
     "bio": "中V PV师创作者，相依团队联合发起人与主力策划，统筹视频制作与企划宣发。",
     "representativeWorks": [
       "《依你共鸣》视频/策划",
@@ -584,8 +584,8 @@ export const MEMBERS_DATA: Member[] = [
     "name": "仲瑾特雷森帝吓室",
     "avatar": "https://i1.hdslb.com/bfs/face/bbfffcfb6a26a1547f8dc22f17c3d494dc1f1d46.webp",
     "role": "主力作词 / 视频制作",
-    "department": "admin",
-    "badge": "副社长/社团外交官/词作",
+    "department": "lyrics",
+    "badge": "词作/视频",
     "bio": "相依团队主力词作与视频创作者，文字细腻富有哲学意境，擅长刻画深层情感。",
     "representativeWorks": [
       "《瞬时爱恋》作词",
@@ -602,7 +602,7 @@ export const MEMBERS_DATA: Member[] = [
     "avatar": "https://i0.hdslb.com/bfs/face/596880ed16c37a2cfc5c5a50e39ef79b8ddbdf92.webp",
     "role": "网易云官方运营",
     "department": "admin",
-    "badge": "运营部",
+    "badge": "运营者",
     "bio": "网易云官方运营核心成员",
     "representativeWorks": [
       "《依你共鸣》作词"
@@ -699,7 +699,7 @@ export const MEMBERS_DATA: Member[] = [
     "name": "腐叶化蝶",
     "avatar": "https://i0.hdslb.com/bfs/face/677185a1973a82ac4d7fe7b847a58923e7cbeb6e.jpg",
     "role": "混音师 / 调教师",
-    "department": "tuning",
+    "department": "music",
     "badge": "混音工程师",
     "bio": "擅长声场空间构架与频段雕琢，为《瞬时爱恋》打造纯净通透的声音质感。",
     "representativeWorks": [
@@ -714,10 +714,10 @@ export const MEMBERS_DATA: Member[] = [
     "id": "mem-1787763814328",
     "name": "小精灵lxy",
     "avatar": "https://i0.hdslb.com/bfs/face/7bd7aa7793f6e99a23b12a44a1ad621cd8738f26.jpg",
-    "role": "哔站官方运营/网站开发/bot开发者",
+    "role": "哔站官方运营",
     "department": "admin",
     "badge": "运营部",
-    "bio": "哔站官方运营者，擅长后勤，各种与代码相关的开发（网站，bot）",
+    "bio": "哔站官方运营者",
     "representativeWorks": [
       "《瞬时爱恋》"
     ],
@@ -732,7 +732,7 @@ export const MEMBERS_DATA: Member[] = [
     "avatar": "https://i0.hdslb.com/bfs/face/75c1b9ba2c956758a751113c5a6715bc8f492911.webp",
     "role": "ACE调校",
     "department": "tuning",
-    "badge": "ACE调校",
+    "badge": "主创社员",
     "bio": "10后P主；生日911；江苏省南通市第二忧郁",
     "representativeWorks": [
       "《瞬时爱恋》"
@@ -780,7 +780,7 @@ export const MEMBERS_DATA: Member[] = [
     "avatar": "https://i0.hdslb.com/bfs/face/c622da0655fc101c3bf98781b7a91e7b815500f3.jpg",
     "role": "编曲 / 作曲 / 作词",
     "department": "music",
-    "badge": "副策划",
+    "badge": "主创社员",
     "bio": "想听歌的可以去wyy找哦。新人锦依卫一只，会点作词作曲（刚入门，不喜轻喷），不定时更新，梦想是写出人人都喜欢的作品",
     "representativeWorks": [
       "《瞬时爱恋》"
@@ -797,7 +797,7 @@ export const MEMBERS_DATA: Member[] = [
     "role": "调校",
     "department": "tuning",
     "badge": "副创社员",
-    "bio": "相依社新晋调音，擅长V家所有声库；潮汐回响乐队贝斯兼作曲（乐队已暂停活动），手下MV摄制团队可为相依社提供服务",
+    "bio": "洛佬，嘿嘿，佬 ，嘿嘿，佬 ，嘿嘿，佬，佬，我亲爱的佬 你怎么就是个纸片人啊",
     "representativeWorks": [
       "《瞬时爱恋》"
     ],
@@ -819,6 +819,22 @@ export const MEMBERS_DATA: Member[] = [
     ],
     "socialLinks": {
       "bilibili": "https://space.bilibili.com/1951377998"
+    },
+    "joinDate": "2026.01"
+  },
+  {
+    "id": "mem-1787798062362",
+    "name": "しらかみ_紙",
+    "avatar": "https://i0.hdslb.com/bfs/face/a12999b4c27fc51f3bdc5870a76ce72586ae2477.jpg",
+    "role": "画师",
+    "department": "visual",
+    "badge": "主创社员/曲绘",
+    "bio": "相依主力画师",
+    "representativeWorks": [
+      "《瞬时爱恋》"
+    ],
+    "socialLinks": {
+      "bilibili": "https://b23.tv/oYR5ej2https://space.bilibili.com/3546735332821185"
     },
     "joinDate": "2026.01"
   }
