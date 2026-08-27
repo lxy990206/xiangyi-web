@@ -1,12 +1,12 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-08-27T11:27:33.621Z (2026/8/27 19:27:33)
+ * 自动同步生成时间: 2026-08-27T13:00:18.795Z (2026/8/27 21:00:18)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
 
 // 数据同步版本时间戳：GitHub 自动同步时更新，用于检测部署新版数据并自动刷新浏览器本地缓存
-export const TEAM_DATA_SYNCED_AT = '2026-08-27T11:27:33.621Z';
+export const TEAM_DATA_SYNCED_AT = '2026-08-27T13:00:18.795Z';
 
 export const TEAM_INFO = {
   "name": "相依社",
@@ -63,7 +63,8 @@ export const TEAM_INFO = {
       "id": "m-1",
       "year": "2025.09.06",
       "title": "相依团队正式创立",
-      "desc": "由多位中文Vocaloid音乐与ACE调校爱好者聚首创立，确立“为爱发电，相依同行”的社团理念。"
+      "desc": "由多位中文Vocaloid音乐与ACE调校爱好者聚首创立，确立“为爱发电，相依同行”的社团理念。",
+      "description": "伟大转折（bushi）"
     },
     {
       "id": "m-2",
@@ -83,13 +84,15 @@ export const TEAM_INFO = {
       "id": "m-4",
       "year": "2026.02.17",
       "title": "2026春节特别单曲《瞬时爱恋》",
-      "desc": "洛天依全新单曲登顶社团精选，ACE Studio精细拟真调校与唯美PV同步上线。"
+      "desc": "洛天依全新单曲登顶社团精选，ACE Studio精细拟真调校与唯美PV同步上线。",
+      "description": "当日突破2000播放量"
     },
     {
       "id": "m-5",
       "year": "2026.03",
-      "title": "春季全方位招募与新企划推进",
-      "desc": "面向全网招募曲绘师、PV动画师与调校师，筹备下一阶段大型歌姬物语。"
+      "title": "全方位招募与未来新企划推进",
+      "desc": "面向全网招募曲绘师、PV动画师与调校师，筹备下一阶段大型歌姬物语。",
+      "description": "期待给位志同道合喜欢术力口的朋友加入"
     }
   ],
   "faqs": [
@@ -578,7 +581,7 @@ export const MEMBERS_DATA: Member[] = [
     "role": "作曲 / 编曲",
     "department": "music",
     "badge": "编曲师",
-    "bio": "青年编曲人，擅长现代流行与电子融合曲风，为《瞬时爱恋》打造动人心弦的旋律。",
+    "bio": "编曲，擅长现代流行与电子融合曲风，参与《瞬时爱恋》旋律制作。",
     "representativeWorks": [
       "《依你共鸣》《瞬时爱恋》作曲/编曲"
     ],
@@ -594,7 +597,7 @@ export const MEMBERS_DATA: Member[] = [
     "role": "主力作词 / 视频制作",
     "department": "lyrics",
     "badge": "副社长/主力作词",
-    "bio": "相依团队主力词作与视频创作者，文字细腻富有哲学意境，擅长刻画深层情感。",
+    "bio": "相依团队荣誉副社长，主力词作与视频创作者，1099，南北大好",
     "representativeWorks": [
       "《瞬时爱恋》作词",
       "《依你共鸣》视频制作"
@@ -628,7 +631,7 @@ export const MEMBERS_DATA: Member[] = [
     "role": "ACE Studio / Vocaloid 调教师 / 英文调教师",
     "department": "tuning",
     "badge": "ACE调教师",
-    "bio": "精通ACE Studio与各大歌姬引擎调校，对呼吸声与颤音细节把控极具匠心。",
+    "bio": "ACE Studio与各歌姬引擎调校",
     "representativeWorks": [
       "《瞬时爱恋》ACE调教，各种英文曲翻调"
     ],
@@ -661,7 +664,7 @@ export const MEMBERS_DATA: Member[] = [
     "role": "PV师 / 动效监督",
     "department": "video",
     "badge": "PV制作",
-    "bio": "B站资深PV动画制作UP主（6万+关注），以精湛镜头语言与动态张力为《瞬时爱恋》打造视觉盛宴。",
+    "bio": "B站资深PV动画制作UP主（6万+关注）",
     "representativeWorks": [
       "《瞬时爱恋》PV动画"
     ],
@@ -855,7 +858,7 @@ export const MEMBERS_DATA: Member[] = [
 export const RECRUITMENT_POSITIONS: RecruitmentPosition[] = [
   {
     "id": "rec-1",
-    "title": "曲绘师 / 插画概念设计",
+    "title": "曲绘师 / 画师",
     "department": "visual",
     "isUrgent": true,
     "spots": "2-3名",
@@ -878,7 +881,7 @@ export const RECRUITMENT_POSITIONS: RecruitmentPosition[] = [
   },
   {
     "id": "rec-2",
-    "title": "PV师 / 动态视觉特效师",
+    "title": "PV师 ",
     "department": "video",
     "isUrgent": true,
     "spots": "1-2名",
@@ -964,6 +967,29 @@ export const RECRUITMENT_POSITIONS: RecruitmentPosition[] = [
       "作品随企划在多平台发布推广",
       "参与后续商业化企划的优先机会",
       "制作过程中提供素材与音源资源支持"
+    ]
+  },
+  {
+    "id": "rec-1787832389534",
+    "title": "首席推广官",
+    "department": "admin",
+    "isUrgent": false,
+    "spots": "1-2名",
+    "requirements": [
+      "热爱洛天依与歌姬创作",
+      "对术力口包含兴趣和热爱",
+      "幽默风趣，脾气好，待人亲和，不怕社死，敢于整活",
+      "有想法有创意，不ky，尊重他人社团",
+      "有社团推广拉新等工作经验者优先"
+    ],
+    "responsibilities": [
+      "在各大线下活动中统筹并组织安排团队拉新，推广工作",
+      "分发物料，忽悠新人入群，有充足时间尽量活跃在二次元相关活动中",
+      "为爱发电，积极思考群宣活动策划和参与讨论"
+    ],
+    "perks": [
+      "官方Staff署名",
+      "社团内部交流支持团队提供物料，部分活动的行动方案和勇气支持"
     ]
   }
 ];
