@@ -1,12 +1,12 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-08-27T13:14:09.168Z (2026/8/27 21:14:09)
+ * 自动同步生成时间: 2026-08-29T17:07:13.839Z (2026/8/30 01:07:13)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
 
 // 数据同步版本时间戳：GitHub 自动同步时更新，用于检测部署新版数据并自动刷新浏览器本地缓存
-export const TEAM_DATA_SYNCED_AT = '2026-08-27T13:14:09.168Z';
+export const TEAM_DATA_SYNCED_AT = '2026-08-29T17:07:13.839Z';
 
 export const TEAM_INFO = {
   "name": "相依社",
@@ -93,6 +93,12 @@ export const TEAM_INFO = {
       "title": "全方位招募与未来新企划推进",
       "desc": "面向全网招募曲绘师、PV动画师与调校师，筹备下一阶段大型歌姬物语。",
       "description": "期待给位志同道合喜欢术力口的朋友加入"
+    },
+    {
+      "id": "ms-1788022949865",
+      "year": "2026.9.6",
+      "title": "相依团队官方网站正式开放访问",
+      "description": "2026.9.6，相依团队成立一周年，相依成功拥有了属于自己的官方网站"
     }
   ],
   "faqs": [
