@@ -1,12 +1,12 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-08-29T17:07:13.839Z (2026/8/30 01:07:13)
+ * 自动同步生成时间: 2026-08-29T18:11:49.581Z (2026/8/30 02:11:49)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
 
 // 数据同步版本时间戳：GitHub 自动同步时更新，用于检测部署新版数据并自动刷新浏览器本地缓存
-export const TEAM_DATA_SYNCED_AT = '2026-08-29T17:07:13.839Z';
+export const TEAM_DATA_SYNCED_AT = '2026-08-29T18:11:49.581Z';
 
 export const TEAM_INFO = {
   "name": "相依社",
@@ -569,7 +569,7 @@ export const MEMBERS_DATA: Member[] = [
     "role": "联合发起人 / 策划 / 视频制作",
     "department": "admin",
     "badge": "创始人/主策划",
-    "bio": "中V PV师创作者，相依团队联合发起人与主力策划，统筹视频制作与企划宣发。",
+    "bio": "相依社创始人，相依社高层管理员之一，中V PV师创作者，相依团队联合发起人与主力策划，统筹视频制作与企划宣发。",
     "representativeWorks": [
       "《依你共鸣》视频/策划",
       "《瞬时爱恋》联合策划",
@@ -603,7 +603,7 @@ export const MEMBERS_DATA: Member[] = [
     "role": "主力作词 / 视频制作",
     "department": "lyrics",
     "badge": "副社长/主力作词",
-    "bio": "相依团队荣誉副社长，主力词作与视频创作者，1099，南北大好",
+    "bio": "相依团队荣誉副社长，相依社高层管理员之一，主力词作与视频创作者，1099，南北大好",
     "representativeWorks": [
       "《瞬时爱恋》作词",
       "《依你共鸣》视频制作"
@@ -738,7 +738,7 @@ export const MEMBERS_DATA: Member[] = [
     "role": "哔站官方运营",
     "department": "admin",
     "badge": "运营部",
-    "bio": "哔站官方运营者",
+    "bio": "相依社高层管理员之一，哔站官方运营者",
     "representativeWorks": [
       "网站开发，bot开发"
     ],
