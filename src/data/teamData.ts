@@ -1,12 +1,12 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-08-29T18:11:49.581Z (2026/8/30 02:11:49)
+ * 自动同步生成时间: 2026-08-30T06:51:13.288Z (2026/8/30 14:51:13)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
 
 // 数据同步版本时间戳：GitHub 自动同步时更新，用于检测部署新版数据并自动刷新浏览器本地缓存
-export const TEAM_DATA_SYNCED_AT = '2026-08-29T18:11:49.581Z';
+export const TEAM_DATA_SYNCED_AT = '2026-08-30T06:51:13.288Z';
 
 export const TEAM_INFO = {
   "name": "相依社",
@@ -584,10 +584,10 @@ export const MEMBERS_DATA: Member[] = [
     "id": "mem-4",
     "name": "本本不是胆小鬼",
     "avatar": "https://i2.hdslb.com/bfs/face/f44ea56434217e8d1da1f3945a910d893f7708e4.jpg",
-    "role": "作曲 / 编曲",
+    "role": "作曲 / 编曲 / 混音",
     "department": "music",
     "badge": "编曲师",
-    "bio": "编曲，擅长现代流行与电子融合曲风，参与《瞬时爱恋》旋律制作。",
+    "bio": "作曲 / 编曲 / 混音，擅长现代流行与电子融合以及日摇曲风，参与《瞬时爱恋》旋律制作。",
     "representativeWorks": [
       "《依你共鸣》《瞬时爱恋》作曲/编曲"
     ],
