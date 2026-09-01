@@ -1,12 +1,12 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-09-01T09:37:31.918Z (2026/9/1 17:37:31)
+ * 自动同步生成时间: 2026-09-01T09:42:59.535Z (2026/9/1 17:42:59)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
 
 // 数据同步版本时间戳：GitHub 自动同步时更新，用于检测部署新版数据并自动刷新浏览器本地缓存
-export const TEAM_DATA_SYNCED_AT = '2026-09-01T09:37:31.918Z';
+export const TEAM_DATA_SYNCED_AT = '2026-09-01T09:42:59.535Z';
 
 export const TEAM_INFO = {
   "name": "相依社",
@@ -863,7 +863,7 @@ export const MEMBERS_DATA: Member[] = [
     "id": "mem-1788254884884",
     "name": "舒玄野柳",
     "avatar": "http://i1.hdslb.com/bfs/face/75ffc5d284f40d5865081d72e1af09e02aa16096.jpg",
-    "role": "网站运营费",
+    "role": "网站运营",
     "department": "admin",
     "badge": "运营部",
     "bio": "相依社网站运营，备案与服务器提供者",
