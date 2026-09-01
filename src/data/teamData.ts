@@ -1,12 +1,12 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-09-01T07:48:19.151Z (2026/9/1 15:48:19)
+ * 自动同步生成时间: 2026-09-01T08:15:59.900Z (2026/9/1 16:15:59)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
 
 // 数据同步版本时间戳：GitHub 自动同步时更新，用于检测部署新版数据并自动刷新浏览器本地缓存
-export const TEAM_DATA_SYNCED_AT = '2026-09-01T07:48:19.151Z';
+export const TEAM_DATA_SYNCED_AT = '2026-09-01T08:15:59.900Z';
 
 export const TEAM_INFO = {
   "name": "相依社",
@@ -672,7 +672,7 @@ export const MEMBERS_DATA: Member[] = [
     "badge": "PV制作",
     "bio": "B站PV动画制作UP主（6万+关注），网易云/酷狗:Taskkill_XiaoMa，邮箱：Taskkill_XiaoMa@163.com，欢迎老师们提出建议！",
     "representativeWorks": [
-      "《瞬时爱恋》PV动画"
+      "《瞬时爱恋》PV动画，各种曲目的teto SV翻调"
     ],
     "socialLinks": {
       "bilibili": "https://space.bilibili.com/3537125622417583"
@@ -804,7 +804,7 @@ export const MEMBERS_DATA: Member[] = [
     "badge": "副策划/曲词调混",
     "bio": "想听歌的可以去wyy找哦。新人锦依卫一只，会点作词作曲（刚入门，不喜轻喷），不定时更新，梦想是写出人人都喜欢的作品",
     "representativeWorks": [
-      "《晚风邮差》《依生挚爱》"
+      "《晚风邮差》，天依十四周年原创生贺《依生挚爱》"
     ],
     "socialLinks": {
       "bilibili": "https://space.bilibili.com/3494379832478659"
