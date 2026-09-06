@@ -1,47 +1,65 @@
 import React, { useState } from 'react';
-import { 
-  Sparkles, 
-  Flame, 
-  Paintbrush, 
-  Film, 
-  Mic2, 
-  Music, 
-  CheckCircle2, 
-  Send, 
-  HelpCircle, 
-  Mail, 
-  MessageCircle, 
+import {
+  Sparkles,
+  Flame,
+  CheckCircle2,
+  HelpCircle,
+  Mail,
   FileText,
-  AlertCircle
+  AlertCircle,
+  ClipboardList,
+  ExternalLink,
+  MousePointerClick,
+  PenLine
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
+
+/** 飞书招募报名表单分享链接：报名数据实时收录至飞书多维表格，管理员可在飞书中查看与跟进 */
+const FEISHU_FORM_URL = 'https://my.feishu.cn/share/base/shrcninVpjOJ0WvbL9JV8uMbyzg';
 
 export const RecruitmentView: React.FC = () => {
   const { recruitmentPositions, teamInfo } = useData();
   const [selectedPosition, setSelectedPosition] = useState<string>(
     recruitmentPositions[0]?.id || ''
   );
-  const [formData, setFormData] = useState({
-    name: '',
-    role: recruitmentPositions[0]?.title || '',
-    contact: '',
-    contactType: 'QQ',
-    portfolioUrl: '',
-    intro: '',
-    agreed: true
-  });
-  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const activePos = recruitmentPositions.find((p) => p.id === selectedPosition) || recruitmentPositions[0];
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name.trim() || !formData.contact.trim() || !formData.portfolioUrl.trim()) {
-      alert('请完整填写您的昵称、联系方式及作品链接！');
-      return;
-    }
-    setIsSubmitted(true);
+  /** 部门编码 → 中文名称 */
+  const deptLabel = (dept: string): string =>
+    ({
+      admin: '策划 / 运营',
+      music: '作曲 / 编曲 / 混音',
+      visual: '曲绘 / 插画',
+      video: 'PV / 动态影像',
+      tuning: '歌姬调校',
+      lyrics: '作词 / 文案',
+    }[dept] || dept);
+
+  /** 跳转飞书报名表单（新标签页打开） */
+  const openFeishuForm = () => {
+    window.open(FEISHU_FORM_URL, '_blank', 'noopener,noreferrer');
   };
+
+  // 岗位数据为空时给出占位提示，避免空引用
+  if (!activePos) {
+    return (
+      <div className="pb-12 animate-fade-in text-slate-100 flex flex-col items-center justify-center py-20 gap-3">
+        <HelpCircle className="w-10 h-10 text-slate-600" />
+        <p className="text-sm text-slate-400">当前暂无开放岗位，欢迎通过招募邮箱与我们保持联系</p>
+        <p className="text-xs text-cyan-400 font-mono">{teamInfo.socials.email}</p>
+      </div>
+    );
+  }
+
+  /** 报名表单需要准备的材料清单（与飞书表单必填项保持一致） */
+  const preparationItems = [
+    { label: '创作者昵称 / 常用称呼', hint: '例：青羽 / Moonlight', required: true },
+    { label: '应募岗位', hint: activePos?.title || '从开放岗位中选择', required: true },
+    { label: '联系方式', hint: 'QQ / B站 UID / 邮箱 / 微信', required: true },
+    { label: '代表作品链接', hint: 'B站 / 网易云 / Pixiv / 网盘等', required: true },
+    { label: '自我介绍', hint: '喜欢的歌姬、擅长的工作流或创作经历（选填）', required: false },
+  ];
 
   return (
     <div className="space-y-8 pb-12 animate-fade-in text-slate-100">
@@ -89,10 +107,7 @@ export const RecruitmentView: React.FC = () => {
               return (
                 <div
                   key={pos.id}
-                  onClick={() => {
-                    setSelectedPosition(pos.id);
-                    setFormData((prev) => ({ ...prev, role: pos.title }));
-                  }}
+                  onClick={() => setSelectedPosition(pos.id)}
                   className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
                     isSelected
                       ? 'bg-slate-800 border-cyan-400 shadow-md shadow-cyan-500/10 ring-1 ring-cyan-400'
@@ -103,7 +118,7 @@ export const RecruitmentView: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-sm text-white">{pos.title}</span>
                     </div>
-                    <span className="text-xs text-slate-400 mt-0.5 block">{pos.department}</span>
+                    <span className="text-xs text-slate-400 mt-0.5 block">{deptLabel(pos.department)}</span>
                   </div>
 
                   {pos.isUrgent && (
@@ -131,7 +146,7 @@ export const RecruitmentView: React.FC = () => {
           </div>
         </div>
 
-        {/* Right: Detailed Requirements & Interactive Application Form (8 cols) */}
+        {/* Right: Detailed Requirements & Application Entry (8 cols) */}
         <div className="lg:col-span-8 space-y-6">
           {/* Active Position Requirements Card */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5 shadow-lg">
@@ -182,148 +197,90 @@ export const RecruitmentView: React.FC = () => {
             )}
           </div>
 
-          {/* Interactive Audition / Application Form */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-lg">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+          {/* Feishu Application Form Entry Card */}
+          <div className="bg-slate-900 border border-cyan-500/30 rounded-2xl overflow-hidden shadow-lg">
+            {/* Card Header */}
+            <div className="flex flex-wrap items-center justify-between gap-2 p-4 sm:p-5 bg-gradient-to-r from-cyan-950/60 via-slate-900 to-slate-900 border-b border-slate-800">
               <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-cyan-400" />
-                <h3 className="text-base font-bold text-white">在线投递 / 申请表单</h3>
+                <div className="w-8 h-8 rounded-lg bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center">
+                  <FileText className="w-4 h-4 text-cyan-400" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">在线报名 · 飞书报名表单</h3>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    报名信息将实时收录至飞书多维表格，统筹策划组将在 3 个工作日内与您联系
+                  </p>
+                </div>
               </div>
-              <span className="text-[11px] text-slate-400">
-                提交后社团负责人将在3个工作日内与您联系
+              <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                官方渠道 · 信息保密
               </span>
             </div>
 
-            {isSubmitted ? (
-              <div className="p-8 text-center space-y-4 rounded-xl bg-cyan-950/30 border border-cyan-500/40 animate-fade-in">
-                <div className="w-14 h-14 rounded-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-8 h-8" />
+            <div className="p-4 sm:p-5 space-y-4">
+              {/* Application Steps */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-950/70 border border-slate-800">
+                  <MousePointerClick className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-white">Step 1 · 选择岗位</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">在左侧列表了解岗位详情</p>
+                  </div>
                 </div>
-                <h4 className="text-lg font-bold text-white">投递成功！感谢你对相依团队的关注！</h4>
-                <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
-                  我们已经收到您的应募信息（申请岗位：<span className="text-cyan-300 font-bold">{formData.role}</span>）。统筹策划组将认真评估您的作品 Demo，并通过您留下的联系方式与您取得联系。
-                </p>
-                <button
-                  onClick={() => {
-                    setIsSubmitted(false);
-                    setFormData({
-                      name: '',
-                      role: activePos.title,
-                      contact: '',
-                      contactType: 'QQ',
-                      portfolioUrl: '',
-                      intro: '',
-                      agreed: true
-                    });
-                  }}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
-                >
-                  继续提交另一份申请
-                </button>
+                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-950/70 border border-slate-800">
+                  <PenLine className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-white">Step 2 · 填写表单</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">在飞书表单中提交报名信息</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-950/70 border border-slate-800">
+                  <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-white">Step 3 · 等待联系</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">作品评估通过后专人对接</p>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Name */}
-                  <div className="space-y-1.5">
-                    <label className="font-semibold text-slate-300">创作者昵称 / 常用称呼 *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="例：青羽 / Moonlight"
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-hidden focus:border-cyan-400 transition-colors"
-                    />
-                  </div>
 
-                  {/* Role */}
-                  <div className="space-y-1.5">
-                    <label className="font-semibold text-slate-300">应募岗位 *</label>
-                    <select
-                      value={formData.role}
-                      onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white focus:outline-hidden focus:border-cyan-400 transition-colors"
-                    >
-                      {recruitmentPositions.map((p) => (
-                        <option key={p.id} value={p.title}>{p.title}</option>
-                      ))}
-                    </select>
-                  </div>
+              {/* Preparation Checklist */}
+              <div className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2.5">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-300">
+                  <ClipboardList className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>报名前请准备以下信息</span>
                 </div>
+                <ul className="space-y-1.5">
+                  {preparationItems.map((item) => (
+                    <li key={item.label} className="flex items-center justify-between gap-2 text-[11px]">
+                      <span className="flex items-center gap-1.5 text-slate-300 min-w-0">
+                        <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${item.required ? 'text-cyan-400' : 'text-slate-600'}`} />
+                        <span className="truncate">{item.label}{item.required ? ' *' : ''}</span>
+                      </span>
+                      <span className="text-slate-500 shrink-0 hidden min-[420px]:inline">{item.hint}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-[10px] text-slate-500 flex items-start gap-1.5 pt-1 border-t border-slate-800/70">
+                  <AlertCircle className="w-3 h-3 shrink-0 mt-px text-slate-500" />
+                  <span>带 * 为必填项；相依团队尊重原创版权，所有作品在发布前严格保密。</span>
+                </p>
+              </div>
 
-                {/* Contact */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="space-y-1.5 sm:col-span-1">
-                    <label className="font-semibold text-slate-300">联系方式类型</label>
-                    <select
-                      value={formData.contactType}
-                      onChange={(e) => setFormData({ ...formData, contactType: e.target.value })}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white focus:outline-hidden focus:border-cyan-400"
-                    >
-                      <option value="QQ">QQ 号码</option>
-                      <option value="Bilibili">B站 UID / 主页</option>
-                      <option value="Email">电子邮箱 Email</option>
-                      <option value="Wechat">微信 WeChat</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <label className="font-semibold text-slate-300">具体联系号码 / 账号 *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.contact}
-                      onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
-                      placeholder="例：QQ号 123456789 或 邮箱"
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-hidden focus:border-cyan-400"
-                    />
-                  </div>
-                </div>
-
-                {/* Portfolio / Demo Link */}
-                <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-300">
-                    代表作品链接 (B站 / 网易云 / Pixiv / Lofter / 百度网盘等) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.portfolioUrl}
-                    onChange={(e) => setFormData({ ...formData, portfolioUrl: e.target.value })}
-                    placeholder="https://... 请附上作品集或公开作品链接"
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-hidden focus:border-cyan-400"
-                  />
-                </div>
-
-                {/* Intro / Note */}
-                <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-300">自我介绍 / 创作风格 / 期望</label>
-                  <textarea
-                    rows={3}
-                    value={formData.intro}
-                    onChange={(e) => setFormData({ ...formData, intro: e.target.value })}
-                    placeholder="简单聊聊你喜欢的歌姬、擅长的工作流或创作经历吧..."
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-hidden focus:border-cyan-400"
-                  />
-                </div>
-
-                <div className="pt-2 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                    <AlertCircle className="w-3.5 h-3.5 text-cyan-400" />
-                    相依团队尊重原创版权，所有作品在发布前严格保密。
-                  </span>
-
-                  <button
-                    type="submit"
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-cyan-500/30 transition-all cursor-pointer hover:scale-102"
-                  >
-                    <Send className="w-4 h-4" />
-                    <span>提交应募申请</span>
-                  </button>
-                </div>
-              </form>
-            )}
+              {/* Action Button */}
+              <button
+                onClick={openFeishuForm}
+                className="group w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/30 transition-all cursor-pointer hover:scale-[1.01]"
+              >
+                <ExternalLink className="w-4 h-4 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                <span className="truncate">前往飞书报名表单</span>
+                <span className="hidden min-[420px]:inline truncate">· 应募「{activePos.title}」</span>
+              </button>
+              <p className="text-center text-[11px] text-slate-500">
+                点击后将为您打开飞书在线表单（无需安装飞书，微信 / 浏览器均可填写），
+                也可通过招募邮箱 <span className="text-cyan-400 font-mono">{teamInfo.socials.email}</span> 直接投递
+              </p>
+            </div>
           </div>
         </div>
       </div>
