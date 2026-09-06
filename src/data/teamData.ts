@@ -1,12 +1,12 @@
 /**
  * 相依团队 (Xiangyi Team) 官方网站核心数据配置
- * 自动同步生成时间: 2026-09-06T12:28:20.893Z (2026/9/6 20:28:20)
+ * 自动同步生成时间: 2026-09-06T12:40:40.050Z (2026/9/6 20:40:40)
  * 包含社团简介、原创单曲(含试听音频配置)、专辑、合作项目、成员名单、公告及招募岗位。
  */
 import { SongItem, AlbumItem, Member, RecruitmentPosition, Collaboration, Announcement } from '../types';
 
 // 数据同步版本时间戳：GitHub 自动同步时更新，用于检测部署新版数据并自动刷新浏览器本地缓存
-export const TEAM_DATA_SYNCED_AT = '2026-09-06T12:28:20.893Z';
+export const TEAM_DATA_SYNCED_AT = '2026-09-06T12:40:40.050Z';
 
 export const TEAM_INFO = {
   "name": "相依社",
@@ -20,7 +20,7 @@ export const TEAM_INFO = {
   "stats": {
     "worksCount": "2+",
     "playCount": "10000+",
-    "membersCount": "21",
+    "membersCount": "22",
     "albumsCount": "1",
     "fanCount": "30000+"
   },
@@ -888,6 +888,22 @@ export const MEMBERS_DATA: Member[] = [
     ],
     "socialLinks": {
       "bilibili": "https://space.bilibili.com/652133941"
+    },
+    "joinDate": "2026.01"
+  },
+  {
+    "id": "mem-1788698327160",
+    "name": "绿鸟P",
+    "avatar": "https://i0.hdslb.com/bfs/face/f45d5300b227bbd9ab0056b7e1494be468d69b60.jpg",
+    "role": "词曲编调混",
+    "department": "music",
+    "badge": "副创社员",
+    "bio": "曲风主要是电子（目前在学rnb和funk），调教主要在ace和xs，目前在学ou和sv。策划过东方栀子生日会，ace元旦春日来信，黑塔利亚新春会技术部门。参加过东方栀子春晚，三体春晚",
+    "representativeWorks": [
+      "东方栀子生日会，《春日来信》"
+    ],
+    "socialLinks": {
+      "bilibili": "https://space.bilibili.com/3546774581021234"
     },
     "joinDate": "2026.01"
   }
