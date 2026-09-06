@@ -6,3 +6,10 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# 飞书 Base CLI 导出的临时数据文件
+tbl*_*.manifest.json
+tbl*_*.ndjson
+
+# HTML 分享包临时文件
+.trae-html-share-packages/
