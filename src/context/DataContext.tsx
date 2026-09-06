@@ -252,6 +252,58 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
+  // ===== 新部署自动刷新：后台修改并同步到 GitHub 重新部署后，已打开的页面自动应用更新 =====
+  // 原理：定时（含页面重新可见时）拉取线上 index.html，比对入口脚本的内容哈希；
+  // 哈希变化说明有新版本部署 → 自动刷新页面，加载时 shouldAdoptNewDefaults 会采用新版数据。
+  useEffect(() => {
+    /** 当前页面正在使用的入口脚本地址（形如 /assets/index-XXXX.js；开发模式无此特征，检测自动跳过） */
+    const currentEntrySrc = (): string | null => {
+      const scripts = document.querySelectorAll<HTMLScriptElement>('script[type="module"][src]');
+      for (let i = scripts.length - 1; i >= 0; i--) {
+        if (scripts[i].src.includes('/assets/')) return scripts[i].src;
+      }
+      return null;
+    };
+
+    let stopped = false;
+
+    const checkForNewDeploy = async () => {
+      if (stopped || document.visibilityState !== 'visible') return;
+      const current = currentEntrySrc();
+      if (!current) return;
+      try {
+        const res = await fetch(location.href, { cache: 'no-store' });
+        if (!res.ok) return;
+        const html = await res.text();
+        const match = html.match(/<script[^>]*type="module"[^>]*src="([^"]+)"/);
+        if (!match) return;
+        const latest = new URL(match[1], location.href).href;
+        if (latest === current) return;
+        // 本地存在未同步到线上版本的修改时不自动刷新，避免打断编辑或丢数据
+        const modifiedAt = Date.parse(localStorage.getItem(DATA_MODIFIED_KEY) || '') || 0;
+        const syncedAt = Date.parse(localStorage.getItem(DATA_SYNCED_KEY) || '') || 0;
+        if (modifiedAt > syncedAt) {
+          console.info('[DeployCheck] 检测到新版本部署，但本地有未同步修改，已跳过自动刷新');
+          return;
+        }
+        console.info('[DeployCheck] 检测到新版本部署，自动刷新页面应用更新');
+        location.reload();
+      } catch { /* 网络异常时静默跳过本次检测 */ }
+    };
+
+    const CHECK_INTERVAL_MS = 60_000;
+    const timer = window.setInterval(checkForNewDeploy, CHECK_INTERVAL_MS);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') checkForNewDeploy();
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      stopped = true;
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, []);
+
   // Auth Methods
   const getStoredPassword = () => {
     return localStorage.getItem(ADMIN_PASS_KEY) || DEFAULT_ADMIN_PASS;

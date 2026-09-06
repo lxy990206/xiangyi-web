@@ -3679,14 +3679,29 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate }) => {
                 </div>
               </div>
 
-              <div>
-                <label className="block font-semibold text-slate-300 mb-1">具体职责 / 职务</label>
-                <input
-                  type="text"
-                  value={editingMember.role}
-                  onChange={(e) => setEditingMember({ ...editingMember, role: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-100"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-300 mb-1">具体职责 / 职务</label>
+                  <input
+                    type="text"
+                    value={editingMember.role}
+                    onChange={(e) => setEditingMember({ ...editingMember, role: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-300 mb-1">
+                    入团日期 <span className="text-slate-500 font-normal text-[10px]">（展示于成员卡片）</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={editingMember.joinDate || ''}
+                    onChange={(e) => setEditingMember({ ...editingMember, joinDate: e.target.value })}
+                    placeholder="如 2025.09"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-100"
+                  />
+                </div>
               </div>
 
               <div>
